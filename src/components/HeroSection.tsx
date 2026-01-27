@@ -1,38 +1,7 @@
-"use client";
-
-import { useEffect } from "react";
 import { UnifiedSearchWidget } from "./search/UnifiedSearchWidget";
-import { useSearch } from "@/contexts/SearchContext";
+import { HeroSearchObserver } from "./HeroSearchObserver";
 
 export function HeroSection() {
-  const { searchWidgetRef, setIsSearchHidden } = useSearch();
-
-  // Set up Intersection Observer to detect when search widget is out of view
-  useEffect(() => {
-    const element = searchWidgetRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        // If the element is NOT intersecting (not visible), search is hidden
-        setIsSearchHidden(!entry.isIntersecting);
-      },
-      {
-        // rootMargin: negative top margin means we detect when element
-        // is completely above the viewport
-        rootMargin: "-64px 0px 0px 0px", // Account for navbar height
-        threshold: 0, // Trigger as soon as any part leaves/enters
-      }
-    );
-
-    observer.observe(element);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [searchWidgetRef, setIsSearchHidden]);
-
   return (
     <section className="relative pt-14 lg:pt-16">
       {/* Hero Image Container - Panoramic with visible 24px edge gaps */}
@@ -66,9 +35,11 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Floating Search Widget - attach ref for visibility detection */}
-      <div ref={searchWidgetRef} className="relative z-10 px-4 -mt-16 md:-mt-20 pb-12">
-        <UnifiedSearchWidget showTabs={true} variant="hero" />
+      {/* Floating Search Widget - attach ref for visibility detection via Client Component wrapper */}
+      <div className="relative z-10 px-4 -mt-16 md:-mt-20 pb-12">
+        <HeroSearchObserver>
+          <UnifiedSearchWidget showTabs={true} variant="hero" />
+        </HeroSearchObserver>
       </div>
     </section>
   );
