@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bed, Car, Users, Sparkles, MapPin, Calendar, User, Compass, Minus, Plus } from "lucide-react";
+import { Bed, Car, Users, MapPin, Calendar, User, Compass, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSmartDateRange } from "@/hooks/use-smart-date-range";
 import {
@@ -32,7 +32,6 @@ const services = [
   { id: "stays", label: "Stays", icon: Bed },
   { id: "transport", label: "Transport", icon: Car },
   { id: "guides", label: "Guides", icon: Users },
-  { id: "ai-planner", label: "TripAI", icon: Sparkles },
 ] as const;
 
 type ServiceId = (typeof services)[number]["id"];
@@ -345,19 +344,7 @@ export function MobileSearchView() {
     </div>
   );
 
-  const renderAIPlannerFields = () => (
-    <div className={cn(boxClasses, "py-3")}>
-      <Sparkles className="w-5 h-5 text-primary shrink-0 self-start mt-0.5" />
-      <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-        <label className={labelClasses}>Describe your trip</label>
-        <textarea
-          placeholder="Plan a 5-day honeymoon in Hunza with luxury stays..."
-          className="appearance-none border-none outline-none shadow-none ring-0 focus:ring-0 focus:outline-none bg-transparent p-0 w-full text-base font-semibold text-foreground placeholder:text-foreground/60 leading-tight resize-none min-h-[50px]"
-          rows={2}
-        />
-      </div>
-    </div>
-  );
+
 
   const renderFields = () => {
     switch (activeService) {
@@ -367,8 +354,6 @@ export function MobileSearchView() {
         return renderTransportFields();
       case "guides":
         return renderGuidesFields();
-      case "ai-planner":
-        return renderAIPlannerFields();
       default:
         return renderStaysFields();
     }
@@ -376,8 +361,7 @@ export function MobileSearchView() {
 
   const getButtonText = () => {
     switch (activeService) {
-      case "ai-planner":
-        return "Generate Itinerary";
+
       case "transport":
         return "Find Vehicles";
       case "guides":
@@ -410,7 +394,7 @@ export function MobileSearchView() {
 
       {/* Default Service Tabs - Icon + Text Cards */}
       <div className="px-5 mb-5">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+        <div className="grid grid-cols-3 gap-3">
           {services.map((service) => {
             const Icon = service.icon;
             const isActive = activeService === service.id;
@@ -420,7 +404,7 @@ export function MobileSearchView() {
                 key={service.id}
                 onClick={() => setActiveService(service.id)}
                 className={cn(
-                  "flex flex-col items-center justify-center min-w-[72px] px-3 py-3 rounded-lg transition-all snap-start",
+                  "flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-background text-muted-foreground hover:bg-muted"
