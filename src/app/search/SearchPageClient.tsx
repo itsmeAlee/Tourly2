@@ -4,7 +4,7 @@ import { useState, useMemo, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ChevronLeft, X, Search } from "lucide-react";
+import { ChevronLeft, X, Search, Sparkles } from "lucide-react";
 
 // Components
 import { UnifiedSearchWidget } from "@/components/search/UnifiedSearchWidget";
@@ -15,6 +15,7 @@ import { GuideCard } from "@/components/search/GuideCard";
 import { EmptyState } from "@/components/search/EmptyState";
 import { ListingCard } from "@/components/ListingCard";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { Button } from "@/components/ui/button";
 
 // Mock Data
 import { mockHotels } from "@/data/topRated";
@@ -178,16 +179,52 @@ function SearchResultsContent() {
         <div className="min-h-screen bg-gray-50">
             {/* --- DESKTOP Header (Hidden on Mobile) --- */}
             <div className="hidden md:block sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-                <div className="container mx-auto px-4 py-4">
-                    {/* Logo + Service Tabs Row */}
+                <div className="container mx-auto px-4 lg:px-8 py-4">
+                    {/* Logo + Service Tabs + NavLinks Row (Matches Homepage Navbar) */}
                     <div className="flex items-center justify-between mb-4">
-                        <Link href="/" className="text-xl font-bold text-foreground">
-                            Tourly
-                        </Link>
-                        <Suspense fallback={<div className="h-8" />}>
-                            <ServiceTabs variant="pills" showIcons={true} />
-                        </Suspense>
-                        <div className="w-20" /> {/* Spacer for balance */}
+                        {/* LEFT SECTION: Logo (fixed width for balance) */}
+                        <div className="flex items-center shrink-0 lg:w-[200px]">
+                            <Link href="/" className="text-2xl font-bold tracking-tight text-foreground">
+                                Tourly
+                            </Link>
+                        </div>
+
+                        {/* CENTER SECTION: Service Tabs */}
+                        <div className="flex flex-1 items-center justify-center">
+                            <Suspense fallback={<div className="h-8" />}>
+                                <ServiceTabs variant="underline" showIcons={true} />
+                            </Suspense>
+                        </div>
+
+                        {/* RIGHT SECTION: Nav Links + Login (fixed width for balance) */}
+                        <div className="flex items-center justify-end gap-4 lg:w-[320px]">
+                            {/* Nav Links: About, Support, TripAI */}
+                            <div className="flex items-center gap-6">
+                                <a
+                                    href="#about"
+                                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    About
+                                </a>
+                                <a
+                                    href="#support"
+                                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    Support
+                                </a>
+                                <Link
+                                    href="/ai-planner"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                                >
+                                    <Sparkles className="w-4 h-4" />
+                                    TripAI
+                                </Link>
+                            </div>
+                            {/* Login Button */}
+                            <Button size="sm">
+                                Login
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Unified Search Widget - Pre-filled with URL params */}
@@ -206,18 +243,18 @@ function SearchResultsContent() {
             {/* --- MOBILE Header & App-Like Layout (Visible on Mobile) --- */}
 
             {/* 1. Service-First Header (Sticky Top) */}
-            <header className="md:hidden sticky top-0 z-[60] bg-white border-b border-gray-100/50 transition-all duration-200">
-                <div className="flex items-center gap-2 px-4 h-14">
+            <header className="md:hidden sticky top-0 z-[60] bg-white border-b border-gray-100/50 shadow-sm">
+                <div className="flex items-center gap-1 px-2 h-14">
                     <button
                         onClick={() => router.push("/")}
-                        className="p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-700"
+                        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-700 shrink-0"
                     >
-                        <ChevronLeft size={24} />
+                        <ChevronLeft size={20} />
                     </button>
-                    {/* Service Tabs in Header */}
-                    <div className="flex-1 overflow-x-auto scrollbar-hide">
+                    {/* Service Tabs in Header - compact spacing for mobile */}
+                    <div className="flex items-center">
                         <Suspense fallback={<div className="h-6 w-20 bg-gray-100 rounded animate-pulse" />}>
-                            <ServiceTabs variant="underline" className="w-max mx-auto gap-6" />
+                            <ServiceTabs variant="underline" />
                         </Suspense>
                     </div>
                 </div>

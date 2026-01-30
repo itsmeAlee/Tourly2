@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Bed, Car, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,25 @@ export function ServiceTabs({
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+
+    // Prefetch the search route on idle to avoid first-interaction stalls
+    React.useEffect(() => {
+        const prefetchSearch = () => {
+            router.prefetch("/search");
+        };
+
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+            const id = (window as Window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback?.(prefetchSearch);
+            return () => {
+                if (typeof id === "number") {
+                    (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(id);
+                }
+            };
+        }
+
+        const timeoutId = window.setTimeout(prefetchSearch, 200);
+        return () => window.clearTimeout(timeoutId);
+    }, [router]);
 
     // Determine active tab from URL
     const urlType = searchParams.get("type");
@@ -82,8 +102,9 @@ export function ServiceTabs({
     // Render based on variant
     if (variant === "underline") {
         return (
-            <div className={cn("flex items-center justify-center gap-6", className)}>
+            <div className={cn("flex items-center gap-2 md:gap-4", className)}>
                 {serviceTabs.map((tab) => {
+                    const Icon = tab.icon;
                     const isActive = getIsActive(tab);
 
                     return (
@@ -91,16 +112,18 @@ export function ServiceTabs({
                             key={tab.id}
                             onClick={() => handleTabClick(tab)}
                             className={cn(
-                                "relative py-1 text-sm font-medium transition-colors",
-                                isActive ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                                "relative flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 text-sm font-medium transition-colors duration-200 group",
+                                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {tab.shortLabel}
+                            {showIcons && <Icon className="w-4 h-4" />}
+                            <span>{tab.shortLabel}</span>
                             {/* Underline indicator */}
                             <span
                                 className={cn(
-                                    "absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-transform duration-200 origin-center",
-                                    isActive ? "scale-x-100" : "scale-x-0"
+                                    "absolute bottom-0 left-1 right-1 md:left-2 md:right-2 h-[2px] bg-primary transition-transform duration-200 origin-center",
+                                    isActive ? "scale-x-100" : "scale-x-0",
+                                    "group-hover:scale-x-100"
                                 )}
                             />
                         </button>
@@ -149,14 +172,21 @@ export function ServiceTabs({
                         key={tab.id}
                         onClick={() => handleTabClick(tab)}
                         className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+                            "relative flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-colors duration-200 group",
                             isActive
-                                ? "bg-primary text-primary-foreground"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                ? "text-primary"
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         {showIcons && <Icon className="w-4 h-4" />}
                         <span>{tab.shortLabel}</span>
+                        <span
+                            className={cn(
+                                "absolute bottom-0 left-2 right-2 h-[2px] bg-primary transition-transform duration-200 origin-center",
+                                isActive ? "scale-x-100" : "scale-x-0",
+                                "group-hover:scale-x-100"
+                            )}
+                        />
                     </button>
                 );
             })}

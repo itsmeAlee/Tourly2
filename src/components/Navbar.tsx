@@ -12,7 +12,7 @@ import Link from "next/link";
 function ServiceTabsWithSuspense({ className }: { className?: string }) {
   return (
     <Suspense fallback={<div className="h-8" />}>
-      <ServiceTabs variant="pills" showIcons={true} className={className} />
+      <ServiceTabs variant="underline" showIcons={true} className={className} />
     </Suspense>
   );
 }
@@ -69,6 +69,18 @@ export function Navbar() {
             </Link>
           </div>
 
+          {/* MOBILE: Service Tabs (centered) - visible when scrolled */}
+          <div
+            className={cn(
+              "lg:hidden flex-1 flex items-center justify-center transition-all duration-300",
+              isSearchHidden ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+          >
+            <Suspense fallback={<div className="h-6 w-20 bg-gray-100 rounded animate-pulse" />}>
+              <ServiceTabs variant="underline" />
+            </Suspense>
+          </div>
+
           {/* CENTER SECTION: Service Tabs (only visible when scrolled on desktop) */}
           <div
             className={cn(
@@ -108,15 +120,6 @@ export function Navbar() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border animate-fade-in">
-            {/* Mobile Service Tabs - show when scrolled */}
-            {isSearchHidden && (
-              <div className="mb-4 pb-4 border-b border-border">
-                <Suspense fallback={<div className="h-10" />}>
-                  <ServiceTabs variant="cards" />
-                </Suspense>
-              </div>
-            )}
-
             {/* Mobile Nav Links */}
             <div className="flex flex-col gap-2 mb-4">
               <a
