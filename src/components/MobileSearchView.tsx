@@ -20,12 +20,8 @@ import {
 import { Bed, Car, Users, MapPin, Calendar, User, Compass, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSmartDateRange } from "@/hooks/use-smart-date-range";
-import {
-  TopRatedSection,
-  mockHotels,
-  mockTourOperators,
-  mockGuides,
-} from "./TopRatedSection";
+import { TopRatedSection } from "./TopRatedSection";
+import { mockGuides, mockHotels, mockTourOperators } from "@/data/topRated";
 import { ServiceTabs } from "@/components/ServiceTabs";
 
 const services = [

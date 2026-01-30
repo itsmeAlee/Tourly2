@@ -5,15 +5,15 @@ import { ProductLayout } from '@/components/listing/layout/ProductLayout';
 import { ListingHeader } from '@/components/listing/layout/ListingHeader';
 import { ListingBottomBar } from '@/components/listing/layout/ListingBottomBar';
 import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 type Props = {
-    params: Promise<{ id: string }>;
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    params: { id: string } | Promise<{ id: string }>;
+    searchParams?: { [key: string]: string | string[] | undefined };
 };
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-    const params = await props.params;
+    const params = await Promise.resolve(props.params);
     const listing = MOCK_LISTINGS[params.id];
 
     if (!listing) {
@@ -25,11 +25,24 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return {
         title: `${listing.title} | Tourly`,
         description: listing.description,
+        alternates: {
+            canonical: `/listing/${listing.id}`,
+        },
+        robots: {
+            index: true,
+            follow: true,
+        },
+        openGraph: {
+            title: `${listing.title} | Tourly`,
+            description: listing.description,
+            type: 'article',
+            images: listing.images?.[0]?.url ? [listing.images[0].url] : undefined,
+        },
     };
 }
 
 export default async function ListingPage(props: Props) {
-    const params = await props.params;
+    const params = await Promise.resolve(props.params);
     const listing = MOCK_LISTINGS[params.id];
 
     if (!listing) {

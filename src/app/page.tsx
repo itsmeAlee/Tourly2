@@ -1,12 +1,9 @@
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
-import {
-    TopRatedSection,
-    mockHotels,
-    mockTourOperators,
-    mockGuides,
-} from "@/components/TopRatedSection";
+import { TopRatedSection } from "@/components/TopRatedSection";
+import { mockGuides, mockHotels, mockTourOperators } from "@/data/topRated";
 
 const MobileSearchView = dynamic(
     () => import("@/components/MobileSearchView").then((mod) => mod.MobileSearchView),
@@ -18,9 +15,22 @@ const MobileBottomNav = dynamic(
     { ssr: true }
 );
 
+export const metadata: Metadata = {
+    title: "Tourly - Journey to the Roof of the World",
+    description:
+        "Discover the majestic valleys, glaciers, and culture of Gilgit-Baltistan. Your gateway to the North starts here.",
+    alternates: {
+        canonical: "/",
+    },
+    robots: {
+        index: true,
+        follow: true,
+    },
+};
+
 export default function HomePage() {
     return (
-        <div className="min-h-screen bg-background">
+        <main className="min-h-screen bg-background">
             {/* Mobile View */}
             <div className="block md:hidden">
                 <MobileSearchView />
@@ -65,6 +75,6 @@ export default function HomePage() {
                 {/* Footer Spacer */}
                 <div className="h-24" />
             </div>
-        </div>
+        </main>
     );
 }

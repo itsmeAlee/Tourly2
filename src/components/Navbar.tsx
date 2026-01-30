@@ -62,11 +62,11 @@ export function Navbar() {
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* LEFT SECTION: Logo (fixed width for balance) */}
           <div className="flex items-center shrink-0 lg:w-[200px]">
-            <a href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2" aria-label="Tourly home">
               <span className="text-2xl font-bold tracking-tight text-foreground">
                 Tourly
               </span>
-            </a>
+            </Link>
           </div>
 
           {/* CENTER SECTION: Service Tabs (only visible when scrolled on desktop) */}

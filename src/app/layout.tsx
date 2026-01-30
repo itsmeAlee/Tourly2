@@ -13,6 +13,23 @@ export const metadata: Metadata = {
     title: "Tourly - Journey to the Roof of the World",
     description:
         "Discover the majestic valleys, glaciers, and culture of Gilgit-Baltistan. Your gateway to the North starts here.",
+    robots: {
+        index: true,
+        follow: true,
+    },
+    openGraph: {
+        title: "Tourly - Journey to the Roof of the World",
+        description:
+            "Discover the majestic valleys, glaciers, and culture of Gilgit-Baltistan. Your gateway to the North starts here.",
+        type: "website",
+        siteName: "Tourly",
+    },
+    twitter: {
+        card: "summary",
+        title: "Tourly - Journey to the Roof of the World",
+        description:
+            "Discover the majestic valleys, glaciers, and culture of Gilgit-Baltistan. Your gateway to the North starts here.",
+    },
 };
 
 export default function RootLayout({
