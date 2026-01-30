@@ -5,7 +5,14 @@ const nextConfig = {
 
     // Image optimization configuration
     images: {
-        remotePatterns: [],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'images.unsplash.com',
+                port: '',
+                pathname: '/**',
+            },
+        ],
         unoptimized: false,
     },
 };

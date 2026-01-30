@@ -23,7 +23,7 @@ export function TransportCard({
     };
 
     return (
-        <Link href={`/transport/${vehicle.id}`} className="block">
+        <Link href={`/listing/${vehicle.id}`} className="block">
             <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 {/* Image Area */}
                 <div className="relative aspect-[4/3] overflow-hidden">

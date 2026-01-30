@@ -26,11 +26,6 @@ const categoryIcons: Record<ListingCategory, React.ReactNode> = {
 };
 
 // URL path mapping for each category
-const categoryPaths: Record<ListingCategory, string> = {
-    hotel: "stays",
-    "tour-operator": "tour-operators",
-    guide: "guides",
-};
 
 export function ListingCard({
     id,
@@ -44,7 +39,7 @@ export function ListingCard({
     isFavorite = false,
     onFavoriteClick,
 }: ListingCardProps) {
-    const href = `/${categoryPaths[category]}/${id}`;
+    const href = `/listing/${id}`;
 
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.preventDefault(); // Prevents the Link navigation
