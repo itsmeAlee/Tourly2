@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { getConversationByListingAndProvider } from "@/data/mockMessages";
 
 interface UseMessageProviderOptions {
     listingId: string;
@@ -22,17 +23,25 @@ export function useMessageProvider({
     const { isAuthenticated, isLoading } = useAuth();
 
     const handleMessageClick = () => {
+        // Check if there's an existing conversation for this listing+provider
+        const existingConversation = getConversationByListingAndProvider(listingId, providerId);
+
         // Store context for the conversation in sessionStorage
         sessionStorage.setItem("pendingMessage", JSON.stringify({
             listingId,
             providerId,
             listingTitle,
+            starterMessage: `Hi! I'm interested in ${listingTitle}.`,
             timestamp: Date.now(),
         }));
 
-        // Determine the target thread/conversation URL
-        // In real implementation, this would create or fetch an existing conversation
-        const targetUrl = `/inbox/thread-${listingId}`;
+        // Determine the target URL:
+        // - If existing conversation exists, go to that thread
+        // - Otherwise, go to inbox (which will show the new message context)
+        // For demo: fallback to thread-1 to show a working chat
+        const targetUrl = existingConversation
+            ? `/inbox/${existingConversation.id}`
+            : `/inbox/thread-1`;
 
         if (!isAuthenticated) {
             // Redirect to login with the intended destination
@@ -50,3 +59,4 @@ export function useMessageProvider({
         isAuthenticated,
     };
 }
+
