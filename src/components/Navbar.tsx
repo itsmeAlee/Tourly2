@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles, MessageSquare } from "lucide-react";
 import { useSearch } from "@/contexts/SearchContext";
 import { cn } from "@/lib/utils";
 import { ServiceTabs } from "@/components/ServiceTabs";
@@ -27,12 +27,13 @@ function NavLinks({ className }: { className?: string }) {
       >
         About
       </a>
-      <a
-        href="#support"
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      <Link
+        href="/inbox"
+        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
-        Support
-      </a>
+        <MessageSquare className="w-4 h-4" />
+        Inbox
+      </Link>
       <Link
         href="/ai-planner"
         className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
@@ -128,12 +129,13 @@ export function Navbar() {
               >
                 About
               </a>
-              <a
-                href="#support"
-                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+              <Link
+                href="/inbox"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
               >
-                Support
-              </a>
+                <MessageSquare className="w-4 h-4" />
+                Inbox
+              </Link>
               <Link
                 href="/ai-planner"
                 className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"

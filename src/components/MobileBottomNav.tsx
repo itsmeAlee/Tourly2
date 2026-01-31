@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Heart, User, Sparkles } from "lucide-react";
+import { Search, User, Sparkles, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TripAIModal } from "@/components/TripAIModal";
 
 const navItems = [
   { id: "explore", label: "Explore", icon: Search },
   { id: "trip-ai", label: "TripAI", icon: Sparkles },
-  { id: "wishlists", label: "Wishlists", icon: Heart },
+  { id: "inbox", label: "Inbox", icon: MessageSquare },
   { id: "profile", label: "Profile", icon: User },
 ] as const;
 
@@ -33,6 +33,9 @@ export function MobileBottomNav() {
                   setActiveItem(item.id);
                   if (item.id === "trip-ai") {
                     setIsTripAIOpen(true);
+                  }
+                  if (item.id === "inbox") {
+                    window.location.href = "/inbox";
                   }
                 }}
                 className={cn(

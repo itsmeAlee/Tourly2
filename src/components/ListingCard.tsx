@@ -48,8 +48,8 @@ export function ListingCard({
     };
 
     return (
-        <Link href={href} className="block">
-            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <Link href={href} className="block cursor-pointer">
+            <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg active:scale-[0.98] transition-all duration-300">
                 {/* Image Area */}
                 <div className="relative aspect-[4/3] overflow-hidden">
                     <img

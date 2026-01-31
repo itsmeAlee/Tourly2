@@ -1,145 +1,254 @@
-
-import { ListingData } from '@/components/listing/mock-data';
-import Image from 'next/image';
-import { Star, MapPin, Globe, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { MapPin, Award, Check, X, Compass, Clock, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { HighlightsRow } from "../shared/HighlightsRow";
+import { StickyActionSidebar } from "../shared/StickyActionSidebar";
+import { ProviderCard } from "../shared/ProviderCard";
+import { NearbyServices } from "../shared/NearbyServices";
+import type { GuideListing, Listing } from "../types";
 
 interface GuideLayoutProps {
-    listing: ListingData;
+    listing: GuideListing;
+    nearbyListings?: Listing[];
 }
 
-export function GuideLayout({ listing }: GuideLayoutProps) {
-    const { guideDetails } = listing;
+export function GuideLayout({ listing, nearbyListings = [] }: GuideLayoutProps) {
+    const { skills, certifications, trekRoutes, equipment, maxGroupSize } = listing;
+
+    // Get initials for avatar fallback
+    const initials = listing.provider.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
 
     return (
-        <div className="pb-32 animate-in fade-in duration-500 bg-white">
-
-            {/* Hero Section - Portrait Focused */}
-            <div className="relative w-full bg-gray-50 pt-20 pb-10 px-4">
-                <div className="max-w-md mx-auto flex flex-col items-center text-center">
-
-                    {/* Main Portrait */}
-                    <div className="relative w-48 h-64 mb-6 rounded-3xl overflow-hidden shadow-2xl border-4 border-white transform rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
-                        <Image
-                            src={listing.images[0].url}
-                            alt={listing.title}
-                            fill
-                            className="object-cover"
-                            priority
+        <div className="container mx-auto px-4 py-6">
+            {/* Portrait-First Hero Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
+                {/* Large Vertical Portrait - Left Side */}
+                <div className="lg:col-span-2">
+                    <div className="relative aspect-[3/4] lg:aspect-[3/4] rounded-2xl overflow-hidden">
+                        <img
+                            src={listing.images[0]?.url}
+                            alt={listing.provider.name}
+                            className="w-full h-full object-cover"
                         />
-                    </div>
-
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">{listing.title}</h1>
-
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <Badge variant="secondary" className="bg-[#0daae7]/10 text-[#0daae7] border-0 px-3 py-1 rounded-full text-xs uppercase tracking-wide font-bold">
-                            Pro Guide
-                        </Badge>
-                        <div className="flex items-center text-gray-600 text-sm">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {listing.location}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-6 text-center">
-                        <div className="text-center">
-                            <div className="flex items-center justify-center font-bold text-gray-900 text-lg">
-                                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 mr-1" />
-                                {listing.rating}
-                            </div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Rating</p>
-                        </div>
-                        <div className="w-px h-8 bg-gray-200" />
-                        <div className="text-center">
-                            <div className="font-bold text-gray-900 text-lg">
-                                {listing.reviewCount}
-                            </div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Reviews</p>
-                        </div>
-                        <div className="w-px h-8 bg-gray-200" />
-                        <div className="text-center">
-                            <div className="font-bold text-gray-900 text-lg">
-                                {guideDetails?.experience}
-                            </div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Exp</p>
+                        {/* Gradient overlay for text visibility */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                        {/* Name overlay on mobile */}
+                        <div className="absolute bottom-4 left-4 right-4 lg:hidden">
+                            <h1 className="text-xl font-bold text-white">
+                                {listing.title}
+                            </h1>
                         </div>
                     </div>
                 </div>
+
+                {/* Action Photos Grid - Right Side */}
+                <div className="lg:col-span-3 grid grid-cols-2 gap-2 lg:gap-3">
+                    {listing.images.slice(1, 5).map((image, index) => (
+                        <div key={index} className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+                            <img
+                                src={image.url}
+                                alt={image.alt}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+            {/* Header Info */}
+            <div className="mt-6 mb-8">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/20 rounded-full">
+                        Trekking Guide
+                    </Badge>
+                </div>
+                <h1 className="hidden lg:block text-2xl lg:text-3xl font-bold text-foreground mb-2">
+                    {listing.title}
+                </h1>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <span>{listing.location}</span>
+                </div>
+            </div>
 
-                {/* Languages */}
-                {guideDetails?.languages && (
-                    <div>
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center">
-                            <Globe className="w-4 h-4 mr-2 text-[#0daae7]" />
-                            Languages Spoken
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            {guideDetails.languages.map((lang) => (
-                                <span key={lang} className="px-4 py-2 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 border border-gray-100">
-                                    {lang}
-                                </span>
+            {/* Main Content + Sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - Main Content */}
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Highlights */}
+                    <section>
+                        <HighlightsRow highlights={listing.highlights} />
+                    </section>
+
+                    {/* Skills & Certifications */}
+                    <section>
+                        <h2 className="text-xl font-bold text-foreground mb-4">
+                            Skills & Certifications
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Skills */}
+                            <div className="space-y-2">
+                                <h3 className="font-semibold text-foreground mb-3">Expertise</h3>
+                                {skills.map((skill, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-2 text-muted-foreground"
+                                    >
+                                        <Check className="w-4 h-4 text-primary shrink-0" />
+                                        {skill}
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Certifications */}
+                            <div className="space-y-2">
+                                <h3 className="font-semibold text-foreground mb-3">Certifications</h3>
+                                {certifications.map((cert, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-start gap-2 text-muted-foreground"
+                                    >
+                                        <Award className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                                        <div>
+                                            <span>{cert.name}</span>
+                                            {cert.issuer && (
+                                                <span className="text-sm text-muted-foreground/70">
+                                                    {' '}— {cert.issuer}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* About */}
+                    <section>
+                        <h2 className="text-xl font-bold text-foreground mb-4">
+                            About This Guide
+                        </h2>
+                        <div className="flex items-center gap-4 mb-4">
+                            <Avatar className="w-12 h-12">
+                                <AvatarImage src={listing.provider.avatar} alt={listing.provider.name} />
+                                <AvatarFallback>{initials}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold">{listing.provider.name}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <Users className="w-3 h-3" />
+                                    Max group size: {maxGroupSize} hikers
+                                </p>
+                            </div>
+                        </div>
+                        <div className="prose prose-gray max-w-none">
+                            {listing.description.split('\n\n').map((paragraph, index) => (
+                                <p key={index} className="text-muted-foreground leading-relaxed mb-4">
+                                    {paragraph}
+                                </p>
                             ))}
                         </div>
-                    </div>
-                )}
+                    </section>
 
-                {/* Specialties */}
-                {guideDetails?.specialties && (
-                    <div>
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center">
-                            <Award className="w-4 h-4 mr-2 text-[#0daae7]" />
-                            Specialties
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            {guideDetails.specialties.map((spec) => (
-                                <div key={spec} className="flex items-center px-4 py-2 bg-[#0daae7]/5 rounded-xl text-sm font-medium text-[#0077a3] border border-[#0daae7]/10">
-                                    <CheckCircle2 className="w-3 h-3 mr-2 opacity-70" />
-                                    {spec}
+                    {/* Routes & Trips */}
+                    <section>
+                        <h2 className="text-xl font-bold text-foreground mb-4">
+                            Popular Treks & Expeditions
+                        </h2>
+                        <div className="space-y-3">
+                            {trekRoutes.map((route, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-muted/30 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Compass className="w-5 h-5 text-primary shrink-0" />
+                                        <span className="font-medium text-foreground">{route.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                        <Clock className="w-4 h-4" />
+                                        {route.duration}
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    </section>
 
-                {/* Bio */}
-                <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">About {listing.title.split(' ')[0]}</h3>
-                    <p className="text-gray-600 leading-relaxed text-lg">
-                        {listing.description}
-                    </p>
+                    {/* Equipment Support */}
+                    <section>
+                        <h2 className="text-xl font-bold text-foreground mb-4">
+                            Equipment Support
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* What's Provided */}
+                            <div className="p-5 bg-green-50 border border-green-100 rounded-2xl">
+                                <h3 className="font-semibold text-green-800 mb-4 flex items-center gap-2">
+                                    <Check className="w-5 h-5" />
+                                    What's Provided
+                                </h3>
+                                <ul className="space-y-2">
+                                    {equipment.provided.map((item, index) => (
+                                        <li
+                                            key={index}
+                                            className="flex items-start gap-2 text-green-700 text-sm"
+                                        >
+                                            <Check className="w-4 h-4 mt-0.5 shrink-0" />
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            {/* What to Bring */}
+                            <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+                                <h3 className="font-semibold text-amber-800 mb-4 flex items-center gap-2">
+                                    <X className="w-5 h-5" />
+                                    What to Bring
+                                </h3>
+                                <ul className="space-y-2">
+                                    {equipment.toBring.map((item, index) => (
+                                        <li
+                                            key={index}
+                                            className="flex items-start gap-2 text-amber-700 text-sm"
+                                        >
+                                            <span className="w-4 h-4 flex items-center justify-center shrink-0">•</span>
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Provider Card */}
+                    <section>
+                        <h2 className="text-xl font-bold text-foreground mb-4">
+                            Contact Information
+                        </h2>
+                        <ProviderCard provider={listing.provider} />
+                    </section>
                 </div>
 
-                {/* Verification */}
-                {listing.provider.isVerified && (
-                    <div className="flex items-start bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                        <ShieldCheck className="w-6 h-6 text-emerald-600 mr-3 mt-1" />
-                        <div>
-                            <h4 className="font-bold text-emerald-900 text-sm">Identity Verified</h4>
-                            <p className="text-emerald-700 text-xs mt-1">
-                                {listing.title} has verified their identity and credentials with Tourly.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Gallery Grid (Secondary Images) */}
-                {listing.images.length > 1 && (
-                    <div>
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Gallery</h3>
-                        <div className="grid grid-cols-2 gap-3 h-48">
-                            {listing.images.slice(1).map((img, i) => (
-                                <div key={i} className="relative rounded-2xl overflow-hidden w-full h-full">
-                                    <Image src={img.url} alt={img.alt} fill className="object-cover" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
+                {/* Right Column - Sticky Sidebar (Desktop only) */}
+                <div className="hidden lg:block">
+                    <StickyActionSidebar
+                        price={listing.price}
+                        priceUnit={listing.priceUnit}
+                        listingId={listing.id}
+                        listingTitle={listing.title}
+                        providerId={listing.provider.id}
+                    />
+                </div>
             </div>
+
+            {/* Nearby Services */}
+            <NearbyServices
+                title={`More Guides in ${listing.region}`}
+                listings={nearbyListings}
+            />
         </div>
     );
 }

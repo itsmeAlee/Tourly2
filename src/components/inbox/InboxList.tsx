@@ -1,0 +1,172 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { MessageSquare, ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import type { Conversation } from "@/data/mockMessages";
+
+interface InboxListProps {
+    conversations: Conversation[];
+}
+
+export function InboxList({ conversations }: InboxListProps) {
+    const router = useRouter();
+    const [filter, setFilter] = useState<'all' | 'unread'>('all');
+
+    const filteredConversations = filter === 'unread'
+        ? conversations.filter(c => c.unreadCount > 0)
+        : conversations;
+
+    const unreadCount = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+
+    const handleBack = () => {
+        router.push('/');
+    };
+
+    if (conversations.length === 0) {
+        return <EmptyState />;
+    }
+
+    return (
+        <div className="min-h-screen bg-white">
+            {/* Header */}
+            <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleBack}
+                                className="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                aria-label="Go back"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-foreground" />
+                            </button>
+                            <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
+                        </div>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setFilter('all')}
+                            className={cn(
+                                "text-sm font-medium pb-2 border-b-2 transition-colors",
+                                filter === 'all'
+                                    ? "text-foreground border-primary"
+                                    : "text-muted-foreground border-transparent hover:text-foreground"
+                            )}
+                        >
+                            All
+                        </button>
+                        <button
+                            onClick={() => setFilter('unread')}
+                            className={cn(
+                                "flex items-center gap-2 text-sm font-medium pb-2 border-b-2 transition-colors",
+                                filter === 'unread'
+                                    ? "text-foreground border-primary"
+                                    : "text-muted-foreground border-transparent hover:text-foreground"
+                            )}
+                        >
+                            Unread
+                            {unreadCount > 0 && (
+                                <span className="px-2 py-0.5 text-xs font-semibold bg-primary text-white rounded-full">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Conversation List */}
+            <main className="container mx-auto">
+                {filteredConversations.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                        No unread conversations
+                    </div>
+                ) : (
+                    <div className="divide-y divide-gray-100">
+                        {filteredConversations.map((conversation) => (
+                            <ConversationRow key={conversation.id} conversation={conversation} />
+                        ))}
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}
+
+function ConversationRow({ conversation }: { conversation: Conversation }) {
+    const hasUnread = conversation.unreadCount > 0;
+
+    return (
+        <Link
+            href={`/inbox/${conversation.id}`}
+            className="flex items-start gap-4 px-4 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+        >
+            {/* Unread Indicator */}
+            <div className="w-2 pt-5">
+                {hasUnread && (
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                )}
+            </div>
+
+            {/* Avatar */}
+            <img
+                src={conversation.providerAvatar}
+                alt={conversation.providerName}
+                className="w-12 h-12 rounded-full object-cover shrink-0"
+            />
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                    <h3 className={cn(
+                        "text-sm truncate",
+                        hasUnread ? "font-bold text-foreground" : "font-medium text-foreground"
+                    )}>
+                        {conversation.providerName}
+                    </h3>
+                    <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                        {conversation.lastMessageTime}
+                    </span>
+                </div>
+                <p className="text-sm text-muted-foreground truncate mb-1">
+                    Re: {conversation.listingTitle}
+                </p>
+                <p className={cn(
+                    "text-sm truncate",
+                    hasUnread ? "text-foreground" : "text-muted-foreground"
+                )}>
+                    {conversation.lastMessage}
+                </p>
+            </div>
+        </Link>
+    );
+}
+
+function EmptyState() {
+    return (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center max-w-md px-4">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                    <MessageSquare className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                    No conversations yet
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                    When you message a provider, your conversations will appear here.
+                </p>
+                <Link href="/">
+                    <Button className="rounded-2xl">
+                        Explore Services
+                    </Button>
+                </Link>
+            </div>
+        </div>
+    );
+}

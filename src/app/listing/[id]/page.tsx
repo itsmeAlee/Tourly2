@@ -1,9 +1,11 @@
 
 import { MOCK_LISTINGS } from '@/components/listing/mock-data';
+import { StaysLayout } from '@/components/listing/layout/StaysLayout';
+import { TransportLayout } from '@/components/listing/layout/TransportLayout';
 import { GuideLayout } from '@/components/listing/layout/GuideLayout';
-import { ProductLayout } from '@/components/listing/layout/ProductLayout';
 import { ListingHeader } from '@/components/listing/layout/ListingHeader';
 import { ListingBottomBar } from '@/components/listing/layout/ListingBottomBar';
+import { isStayListing, isTransportListing, isGuideListing, type Listing } from '@/components/listing/types';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -41,6 +43,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     };
 }
 
+// Component to render the appropriate layout based on listing type
+function ListingContent({ listing }: { listing: Listing }) {
+    if (isStayListing(listing)) {
+        return <StaysLayout listing={listing} />;
+    }
+    if (isTransportListing(listing)) {
+        return <TransportLayout listing={listing} />;
+    }
+    if (isGuideListing(listing)) {
+        return <GuideLayout listing={listing} />;
+    }
+    // Fallback (should never reach here with proper typing)
+    return null;
+}
+
 export default async function ListingPage(props: Props) {
     const params = await Promise.resolve(props.params);
     const listing = MOCK_LISTINGS[params.id];
@@ -49,24 +66,23 @@ export default async function ListingPage(props: Props) {
         notFound();
     }
 
-    // Polymorphic Layout Strategy
-    const isGuide = listing.type === 'guide';
-    const LayoutComponent = isGuide ? GuideLayout : ProductLayout;
-
     return (
         <div className="min-h-screen bg-white">
-            {/* Unified Header */}
-            <ListingHeader />
+            {/* Header with back navigation */}
+            <ListingHeader title={listing.title} />
 
-            {/* Dynamic Content */}
-            <main className="pb-20">
-                <LayoutComponent listing={listing} />
+            {/* Dynamic Content based on listing type */}
+            <main className="pb-24 lg:pb-8">
+                <ListingContent listing={listing} />
             </main>
 
-            {/* Unified Bottom Bar */}
+            {/* Mobile-only Bottom Bar */}
             <ListingBottomBar
                 price={listing.price}
                 priceUnit={listing.priceUnit}
+                listingId={listing.id}
+                listingTitle={listing.title}
+                providerId={listing.provider.id}
             />
         </div>
     );

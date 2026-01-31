@@ -4,7 +4,7 @@ import { useState, useMemo, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ChevronLeft, X, Search, Sparkles } from "lucide-react";
+import { ChevronLeft, X, Search, Sparkles, MessageSquare } from "lucide-react";
 
 // Components
 import { UnifiedSearchWidget } from "@/components/search/UnifiedSearchWidget";
@@ -206,12 +206,13 @@ function SearchResultsContent() {
                                 >
                                     About
                                 </a>
-                                <a
-                                    href="#support"
-                                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                <Link
+                                    href="/inbox"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                                 >
-                                    Support
-                                </a>
+                                    <MessageSquare className="w-4 h-4" />
+                                    Inbox
+                                </Link>
                                 <Link
                                     href="/ai-planner"
                                     className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
