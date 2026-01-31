@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useMessageProvider } from "@/hooks/useMessageProvider";
 
 interface ListingBottomBarProps {
     price: number;
@@ -19,21 +19,13 @@ export function ListingBottomBar({
     listingTitle,
     providerId,
 }: ListingBottomBarProps) {
-    const router = useRouter();
     const formattedPrice = new Intl.NumberFormat('en-PK').format(price);
 
-    const handleMessageClick = () => {
-        // Store context for the new conversation
-        sessionStorage.setItem('newConversationContext', JSON.stringify({
-            listingId,
-            providerId,
-            listingTitle,
-            starterMessage: `Hi! I'm interested in ${listingTitle}.`,
-        }));
-
-        // Navigate to inbox (in production, would create/fetch thread first)
-        router.push('/inbox/thread-1');
-    };
+    const { handleMessageClick, isLoading } = useMessageProvider({
+        listingId,
+        providerId,
+        listingTitle,
+    });
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 lg:hidden">
@@ -55,9 +47,14 @@ export function ListingBottomBar({
                     {/* CTA */}
                     <Button
                         onClick={handleMessageClick}
+                        disabled={isLoading}
                         className="h-11 px-6 text-base font-semibold rounded-xl bg-primary hover:bg-primary/90"
                     >
-                        <MessageCircle className="w-5 h-5 mr-2" />
+                        {isLoading ? (
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        ) : (
+                            <MessageCircle className="w-5 h-5 mr-2" />
+                        )}
                         Message Provider
                     </Button>
                 </div>
@@ -65,4 +62,3 @@ export function ListingBottomBar({
         </div>
     );
 }
-

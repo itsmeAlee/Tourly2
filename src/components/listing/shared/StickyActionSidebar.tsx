@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useMessageProvider } from "@/hooks/useMessageProvider";
 
 interface StickyActionSidebarProps {
     price: number;
@@ -23,26 +23,18 @@ export function StickyActionSidebar({
     providerId,
     className,
 }: StickyActionSidebarProps) {
-    const router = useRouter();
     const [isSaved, setIsSaved] = useState(false);
+
+    const { handleMessageClick, isLoading } = useMessageProvider({
+        listingId,
+        providerId,
+        listingTitle,
+    });
 
     const formattedPrice = new Intl.NumberFormat('en-PK').format(price);
 
     const handleSaveClick = () => {
         setIsSaved(!isSaved);
-    };
-
-    const handleMessageClick = () => {
-        // Store context for the new conversation
-        sessionStorage.setItem('newConversationContext', JSON.stringify({
-            listingId,
-            providerId,
-            listingTitle,
-            starterMessage: `Hi! I'm interested in ${listingTitle}.`,
-        }));
-
-        // Navigate to inbox (in production, would create/fetch thread first)
-        router.push('/inbox/thread-1');
     };
 
     return (
@@ -70,9 +62,14 @@ export function StickyActionSidebar({
             {/* Message Provider CTA */}
             <Button
                 onClick={handleMessageClick}
+                disabled={isLoading}
                 className="w-full h-12 text-base font-semibold rounded-xl bg-primary hover:bg-primary/90 mb-3"
             >
-                <MessageCircle className="w-5 h-5 mr-2" />
+                {isLoading ? (
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                )}
                 Message Provider
             </Button>
 
@@ -99,3 +96,4 @@ export function StickyActionSidebar({
         </div>
     );
 }
+

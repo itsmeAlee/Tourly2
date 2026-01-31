@@ -1,26 +1,61 @@
 "use client";
 
 import { useState } from "react";
-import { Search, User, Sparkles, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, User, Sparkles, MessageSquare, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TripAIModal } from "@/components/TripAIModal";
+import { useAuth } from "@/contexts/AuthContext";
 
-const navItems = [
-  { id: "explore", label: "Explore", icon: Search },
-  { id: "trip-ai", label: "TripAI", icon: Sparkles },
-  { id: "inbox", label: "Inbox", icon: MessageSquare },
-  { id: "profile", label: "Profile", icon: User },
-] as const;
-
-type NavItemId = (typeof navItems)[number]["id"];
+type NavItemId = "explore" | "trip-ai" | "inbox" | "profile" | "login";
 
 export function MobileBottomNav() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const [activeItem, setActiveItem] = useState<NavItemId>("explore");
   const [isTripAIOpen, setIsTripAIOpen] = useState(false);
 
+  // Dynamic nav items based on auth state
+  const navItems = [
+    { id: "explore" as const, label: "Explore", icon: Search },
+    { id: "trip-ai" as const, label: "TripAI", icon: Sparkles },
+    { id: "inbox" as const, label: "Inbox", icon: MessageSquare },
+    // Last item changes based on auth state
+    isAuthenticated
+      ? { id: "profile" as const, label: "Profile", icon: User }
+      : { id: "login" as const, label: "Log in", icon: LogIn },
+  ];
+
+  const handleNavClick = (itemId: NavItemId) => {
+    setActiveItem(itemId);
+
+    switch (itemId) {
+      case "explore":
+        router.push("/");
+        break;
+      case "trip-ai":
+        setIsTripAIOpen(true);
+        break;
+      case "inbox":
+        if (isAuthenticated) {
+          router.push("/inbox");
+        } else {
+          // Redirect to login with next param
+          router.push("/login?next=/inbox");
+        }
+        break;
+      case "profile":
+        router.push("/profile");
+        break;
+      case "login":
+        router.push("/login");
+        break;
+    }
+  };
+
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 h-[60px] pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 h-[60px] pb-safe lg:hidden">
         <div className="flex items-center justify-around h-full">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -29,15 +64,7 @@ export function MobileBottomNav() {
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  setActiveItem(item.id);
-                  if (item.id === "trip-ai") {
-                    setIsTripAIOpen(true);
-                  }
-                  if (item.id === "inbox") {
-                    window.location.href = "/inbox";
-                  }
-                }}
+                onClick={() => handleNavClick(item.id)}
                 className={cn(
                   "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors rounded-xl",
                   isActive ? "text-primary" : "text-muted-foreground"
@@ -55,3 +82,4 @@ export function MobileBottomNav() {
     </>
   );
 }
+

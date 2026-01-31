@@ -2,8 +2,9 @@
 
 import { useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, MessageSquare } from "lucide-react";
+import { Menu, X, Sparkles, MessageSquare, User, LogOut } from "lucide-react";
 import { useSearch } from "@/contexts/SearchContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ServiceTabs } from "@/components/ServiceTabs";
 import Link from "next/link";
@@ -45,9 +46,83 @@ function NavLinks({ className }: { className?: string }) {
   );
 }
 
+// Auth section component
+function AuthSection() {
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  if (isLoading) {
+    return <div className="w-20 h-9 bg-gray-100 rounded-lg animate-pulse" />;
+  }
+
+  if (isAuthenticated && user) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="flex items-center gap-2 p-1.5 rounded-full hover:bg-muted transition-colors"
+        >
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="w-4 h-4 text-primary" />
+            </div>
+          )}
+        </button>
+
+        {/* Dropdown Menu */}
+        {showDropdown && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setShowDropdown(false)}
+            />
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+              <div className="px-4 py-2 border-b border-gray-100">
+                <p className="font-medium text-sm text-foreground truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                onClick={() => setShowDropdown(false)}
+              >
+                <User className="w-4 h-4" />
+                Profile
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  setShowDropdown(false);
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Log out
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <Link href="/login">
+      <Button size="sm">Log in</Button>
+    </Link>
+  );
+}
+
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isSearchHidden } = useSearch();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   return (
     <header
@@ -94,13 +169,11 @@ export function Navbar() {
 
           {/* RIGHT SECTION: Navigation Links + Auth Buttons (fixed width for balance) */}
           <div className="hidden lg:flex items-center justify-end gap-4 lg:w-[320px]">
-            {/* Nav Links: About, Support, TripAI */}
+            {/* Nav Links: About, Inbox, TripAI */}
             <NavLinks />
 
-            {/* Login Button */}
-            <Button size="sm">
-              Login
-            </Button>
+            {/* Auth Section */}
+            <AuthSection />
           </div>
 
           {/* MOBILE: Menu Button */}
@@ -145,9 +218,45 @@ export function Navbar() {
               </Link>
             </div>
 
-            {/* Mobile Auth Button */}
-            <div className="flex flex-col gap-2">
-              <Button size="sm">Login</Button>
+            {/* Mobile Auth Section */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-border">
+              {isLoading ? (
+                <div className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+              ) : isAuthenticated && user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-md transition-colors"
+                  >
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <Link href="/login">
+                  <Button size="sm" className="w-full">Log in</Button>
+                </Link>
+              )}
             </div>
           </div>
         )}
@@ -155,3 +264,4 @@ export function Navbar() {
     </header>
   );
 }
+
