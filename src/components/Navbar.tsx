@@ -7,6 +7,7 @@ import { useSearch } from "@/contexts/SearchContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ServiceTabs } from "@/components/ServiceTabs";
+import { LogoutConfirmModal } from "@/components/auth/LogoutConfirmModal";
 import Link from "next/link";
 
 // Wrapper component for ServiceTabs with Suspense (used in center sticky nav)
@@ -48,8 +49,9 @@ function NavLinks({ className }: { className?: string }) {
 
 // Auth section component
 function AuthSection() {
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   if (isLoading) {
     return <div className="w-20 h-9 bg-gray-100 rounded-lg animate-pulse" />;
@@ -97,14 +99,18 @@ function AuthSection() {
               </Link>
               <button
                 onClick={() => {
-                  logout();
                   setShowDropdown(false);
+                  setShowLogoutModal(true);
                 }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 Log out
               </button>
+              <LogoutConfirmModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+              />
             </div>
           </>
         )}
@@ -121,8 +127,9 @@ function AuthSection() {
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isSearchHidden } = useSearch();
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   return (
     <header
@@ -245,7 +252,7 @@ export function Navbar() {
                     </div>
                   </Link>
                   <button
-                    onClick={logout}
+                    onClick={() => setShowLogoutModal(true)}
                     className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
@@ -261,6 +268,12 @@ export function Navbar() {
           </div>
         )}
       </nav>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </header>
   );
 }
