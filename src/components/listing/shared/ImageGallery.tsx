@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,13 +42,15 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 lg:gap-3">
                 {/* Large Main Image - Takes up 2 columns and 2 rows on desktop */}
                 <div
-                    className="lg:col-span-2 lg:row-span-2 relative cursor-pointer group"
+                    className="lg:col-span-2 lg:row-span-2 relative cursor-pointer group h-64 lg:h-full"
                     onClick={() => openLightbox(0)}
                 >
-                    <img
+                    <Image
                         src={displayImages[0].url}
                         alt={displayImages[0].alt}
-                        className="w-full h-64 lg:h-full object-cover rounded-2xl group-hover:brightness-95 transition-all"
+                        fill
+                        sizes="(min-width: 1024px) 50vw, 100vw"
+                        className="object-cover rounded-2xl group-hover:brightness-95 transition-all"
                     />
                 </div>
 
@@ -56,15 +59,17 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                     <div
                         key={index}
                         className={cn(
-                            "relative cursor-pointer group",
+                            "relative cursor-pointer group h-32 lg:h-40",
                             index < 2 ? "hidden lg:block" : "hidden lg:block"
                         )}
                         onClick={() => openLightbox(index + 1)}
                     >
-                        <img
+                        <Image
                             src={image.url}
                             alt={image.alt}
-                            className="w-full h-32 lg:h-40 object-cover rounded-2xl group-hover:brightness-95 transition-all"
+                            fill
+                            sizes="(min-width: 1024px) 25vw, 100vw"
+                            className="object-cover rounded-2xl group-hover:brightness-95 transition-all"
                         />
                         {/* "View all photos" overlay on last image */}
                         {index === 3 && images.length > 5 && (
@@ -125,12 +130,17 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                     </button>
 
                     {/* Current image */}
-                    <img
-                        src={images[currentIndex].url}
-                        alt={images[currentIndex].alt}
-                        className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
-                        onClick={(e) => e.stopPropagation()}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <Image
+                            src={images[currentIndex].url}
+                            alt={images[currentIndex].alt}
+                            width={1600}
+                            height={1200}
+                            sizes="90vw"
+                            className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded-lg"
+                            priority
+                        />
+                    </div>
 
                     {/* Image counter */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">

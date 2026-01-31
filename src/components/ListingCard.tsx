@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Heart, Star, MapPin, Bed, Mountain, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -52,10 +53,12 @@ export function ListingCard({
             <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg active:scale-[0.98] transition-all duration-300">
                 {/* Image Area */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                    <img
+                    <Image
                         src={image}
                         alt={title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
 
                     {/* Heart Icon - Top Right */}

@@ -176,7 +176,7 @@ function SearchResultsContent() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 overflow-x-hidden md:overflow-x-visible">
             {/* --- DESKTOP Header (Hidden on Mobile) --- */}
             <div className="hidden md:block sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
                 <div className="container mx-auto px-4 lg:px-8 py-4">

@@ -59,9 +59,9 @@ export function ListingHeader({ title }: ListingHeaderProps) {
 
                     {/* Title - visible on desktop only */}
                     {title && (
-                        <h1 className="hidden lg:block text-sm font-semibold text-foreground truncate max-w-md">
+                        <div className="hidden lg:block text-sm font-semibold text-foreground truncate max-w-md">
                             {title}
-                        </h1>
+                        </div>
                     )}
 
                     {/* Actions */}

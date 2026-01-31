@@ -368,7 +368,7 @@ export function MobileSearchView() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/50 pb-20">
+    <div className="min-h-screen bg-muted/50 pb-24 overflow-x-hidden">
       {/* Header */}
       <header className="px-5 pt-6 pb-4">
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Tourly</h1>

@@ -39,9 +39,9 @@ export function GuideLayout({ listing, nearbyListings = [] }: GuideLayoutProps) 
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                         {/* Name overlay on mobile */}
                         <div className="absolute bottom-4 left-4 right-4 lg:hidden">
-                            <h1 className="text-xl font-bold text-white">
+                            <div className="text-xl font-bold text-white">
                                 {listing.title}
-                            </h1>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Heart, MessageCircle, BadgeCheck, MapPin, Languages, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -52,9 +53,9 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
                             <span className="hidden sm:inline text-sm font-medium">Back</span>
                         </button>
 
-                        <h1 className="text-sm font-semibold text-foreground truncate max-w-md">
+                        <div className="text-sm font-semibold text-foreground truncate max-w-md">
                             Provider Profile
-                        </h1>
+                        </div>
 
                         <button
                             onClick={() => setIsSaved(!isSaved)}
@@ -79,9 +80,12 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
                         <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-10">
                             {/* Avatar */}
                             <div className="relative">
-                                <img
+                                <Image
                                     src={provider.avatar}
                                     alt={provider.name}
+                                    width={144}
+                                    height={144}
+                                    sizes="(min-width: 1024px) 144px, 112px"
                                     className="w-28 h-28 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-lg"
                                 />
                                 {provider.isVerified && (
@@ -259,10 +263,12 @@ function ServiceCard({ listing }: { listing: Listing }) {
         >
             {/* Image */}
             <div className="relative aspect-[16/10] overflow-hidden">
-                <img
+                <Image
                     src={listing.images[0]?.url}
                     alt={listing.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {/* Type Badge */}
                 <Badge className="absolute top-3 left-3 rounded-full">

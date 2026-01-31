@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { UnifiedSearchWidget } from "./search/UnifiedSearchWidget";
 import { HeroSearchObserver } from "./HeroSearchObserver";
 
@@ -7,10 +8,13 @@ export function HeroSection() {
       {/* Hero Image Container - Panoramic with visible 24px edge gaps */}
       <div className="relative h-[55vh] min-h-[420px] max-h-[600px] w-full max-w-[calc(100%-48px)] mx-auto rounded-xl overflow-hidden shadow-xl">
         {/* Background Image */}
-        <img
+        <Image
           src="/images/hero-gilgit-baltistan.jpg"
           alt="Majestic mountains of Gilgit-Baltistan with turquoise river"
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
         />
 
         {/* Overlay - darker for better text visibility */}
