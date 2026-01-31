@@ -42,21 +42,23 @@ export function ServiceTabs({
 
     // Prefetch the search route on idle to avoid first-interaction stalls
     React.useEffect(() => {
+        // Guard for SSR
+        if (typeof window === "undefined") return;
+
         const prefetchSearch = () => {
             router.prefetch("/search");
         };
 
-        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-            const id = (window as Window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback?.(prefetchSearch);
+        // Use requestIdleCallback if available, otherwise setTimeout
+        if ("requestIdleCallback" in window) {
+            const id = (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(prefetchSearch);
             return () => {
-                if (typeof id === "number") {
-                    (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(id);
-                }
+                (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
             };
+        } else {
+            const timeoutId = setTimeout(prefetchSearch, 200);
+            return () => clearTimeout(timeoutId);
         }
-
-        const timeoutId = window.setTimeout(prefetchSearch, 200);
-        return () => window.clearTimeout(timeoutId);
     }, [router]);
 
     // Determine active tab from URL
