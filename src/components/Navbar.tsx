@@ -90,12 +90,12 @@ function AuthSection() {
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
               <Link
-                href="/profile"
+                href="/account"
                 className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 onClick={() => setShowDropdown(false)}
               >
                 <User className="w-4 h-4" />
-                Profile
+                Account
               </Link>
               <button
                 onClick={() => {
@@ -232,7 +232,7 @@ export function Navbar() {
               ) : isAuthenticated && user ? (
                 <>
                   <Link
-                    href="/profile"
+                    href="/account"
                     className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-md transition-colors"
                   >
                     {user.avatar ? (

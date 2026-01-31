@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { TripAIModal } from "@/components/TripAIModal";
 import { useAuth } from "@/contexts/AuthContext";
 
-type NavItemId = "explore" | "trip-ai" | "inbox" | "profile" | "login";
+type NavItemId = "explore" | "trip-ai" | "inbox" | "account" | "login";
 
 export function MobileBottomNav() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function MobileBottomNav() {
     { id: "inbox" as const, label: "Inbox", icon: MessageSquare },
     // Last item changes based on auth state
     isAuthenticated
-      ? { id: "profile" as const, label: "Profile", icon: User }
+      ? { id: "account" as const, label: "Account", icon: User }
       : { id: "login" as const, label: "Log in", icon: LogIn },
   ];
 
@@ -44,8 +44,8 @@ export function MobileBottomNav() {
           router.push("/login?next=/inbox");
         }
         break;
-      case "profile":
-        router.push("/profile");
+      case "account":
+        router.push("/account");
         break;
       case "login":
         router.push("/login");
