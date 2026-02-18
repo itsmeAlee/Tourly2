@@ -119,9 +119,14 @@ function AuthSection() {
   }
 
   return (
-    <Link href="/login">
-      <Button size="sm">Log in</Button>
-    </Link>
+    <div className="flex items-center gap-2">
+      <Link href="/login">
+        <Button variant="ghost" size="sm">Log in</Button>
+      </Link>
+      <Link href="/signup">
+        <Button size="sm">Sign up</Button>
+      </Link>
+    </div>
   );
 }
 
@@ -260,9 +265,14 @@ export function Navbar() {
                   </button>
                 </>
               ) : (
-                <Link href="/login">
-                  <Button size="sm" className="w-full">Log in</Button>
-                </Link>
+                <div className="flex flex-col gap-2">
+                  <Link href="/login">
+                    <Button variant="outline" size="sm" className="w-full">Log in</Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button size="sm" className="w-full">Sign up</Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>

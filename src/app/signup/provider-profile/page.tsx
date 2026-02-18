@@ -1,18 +1,17 @@
 import { Suspense } from "react";
-import { SignupForm } from "@/components/auth/SignupForm";
+import { ProviderProfileSetup } from "@/components/auth/ProviderProfileSetup";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Sign up | Tourly",
-    description:
-        "Create your Tourly account and start exploring Northern Pakistan.",
+    title: "Set up your profile | Tourly",
+    description: "Complete your service provider profile to start listing on Tourly.",
     robots: {
         index: false,
         follow: false,
     },
 };
 
-export default function SignupPage() {
+export default function ProviderProfilePage() {
     return (
         <Suspense
             fallback={
@@ -21,7 +20,7 @@ export default function SignupPage() {
                 </div>
             }
         >
-            <SignupForm />
+            <ProviderProfileSetup />
         </Suspense>
     );
 }

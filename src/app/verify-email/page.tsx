@@ -1,18 +1,17 @@
 import { Suspense } from "react";
-import { SignupForm } from "@/components/auth/SignupForm";
+import { VerifyEmailHandler } from "@/components/auth/VerifyEmailHandler";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Sign up | Tourly",
-    description:
-        "Create your Tourly account and start exploring Northern Pakistan.",
+    title: "Verify Email | Tourly",
+    description: "Verify your Tourly email address.",
     robots: {
         index: false,
         follow: false,
     },
 };
 
-export default function SignupPage() {
+export default function VerifyEmailPage() {
     return (
         <Suspense
             fallback={
@@ -21,7 +20,7 @@ export default function SignupPage() {
                 </div>
             }
         >
-            <SignupForm />
+            <VerifyEmailHandler />
         </Suspense>
     );
 }
