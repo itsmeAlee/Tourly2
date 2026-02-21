@@ -293,15 +293,18 @@ export async function markConversationAsRead(
 }
 
 /**
- * Updates the last_message and last_message_at on a conversation.
+ * Updates the last_message, last_message_at, and increments the unread counter.
  *
  * Called internally by `message.service.sendMessage()`.
  */
-export async function updateConversationLastMessage(
+export async function updateConversationAfterMessage(
     conversationId: string,
-    text: string
+    text: string,
+    roleToIncrement: "tourist" | "provider",
+    currentUnread: number
 ): Promise<void> {
     try {
+        const field = roleToIncrement === "tourist" ? "tourist_unread" : "provider_unread";
         await databases.updateDocument(
             DATABASE_ID,
             COLLECTIONS.CONVERSATIONS,
@@ -309,6 +312,7 @@ export async function updateConversationLastMessage(
             {
                 last_message: text.substring(0, 200),
                 last_message_at: new Date().toISOString(),
+                [field]: currentUnread + 1,
             }
         );
     } catch (err) {

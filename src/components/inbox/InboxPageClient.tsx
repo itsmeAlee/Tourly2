@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, RefreshCcw, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,9 @@ import {
     getConversationsForTourist,
     getConversationsForProvider,
 } from "@/services/conversation.service";
-import type { ConversationWithParticipants } from "@/types/conversation.types";
+import { client } from "@/lib/appwrite";
+import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
+import type { ConversationWithParticipants, ConversationDocument } from "@/types/conversation.types";
 
 // ─── Skeleton ────────────────────────────────────────────
 
@@ -80,10 +82,15 @@ export function InboxPageClient() {
         setError(false);
 
         try {
-            const data =
-                user.role === "provider"
-                    ? await getConversationsForProvider(user.id)
-                    : await getConversationsForTourist(user.id);
+            let data: ConversationWithParticipants[] = [];
+
+            if (user.role === "provider") {
+                if (user.providerId) {
+                    data = await getConversationsForProvider(user.providerId);
+                }
+            } else {
+                data = await getConversationsForTourist(user.id);
+            }
 
             setConversations(data);
         } catch (err) {
@@ -107,6 +114,58 @@ export function InboxPageClient() {
             fetchConversations();
         }
     }, [isAuthenticated, user, fetchConversations]);
+
+    // ── Realtime Subscription ────────────────────────────────
+    const unsubRef = useRef<(() => void) | null>(null);
+
+    useEffect(() => {
+        // Only sub after initial load completes to avoid race conditions
+        if (!isAuthenticated || !user || isLoading || error) return;
+
+        const channel = `databases.${DATABASE_ID}.collections.${COLLECTIONS.CONVERSATIONS}.documents`;
+
+        try {
+            const unsubscribe = client.subscribe(channel, (response) => {
+                const payload = response.payload as ConversationDocument;
+
+                // Only react if the conversation specifically targets our current role's identity
+                if (user.role === "provider") {
+                    if (payload.provider_id !== user.providerId) return;
+                } else {
+                    if (payload.tourist_id !== user.id) return;
+                }
+
+                if (response.events.some((e) => e.includes(".create"))) {
+                    // New conversation, fetch full list to get enriched participants
+                    fetchConversations();
+                } else if (response.events.some((e) => e.includes(".update"))) {
+                    // Update existing unread counts and last_message, and re-sort
+                    setConversations((prev) => {
+                        const updated = prev.map((c) =>
+                            c.$id === payload.$id ? { ...c, ...payload } : c
+                        );
+                        return updated.sort((a, b) => {
+                            const tA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+                            const tB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+                            return tB - tA;
+                        });
+                    });
+                } else if (response.events.some((e) => e.includes(".delete"))) {
+                    setConversations((prev) =>
+                        prev.filter((c) => c.$id !== payload.$id)
+                    );
+                }
+            });
+
+            unsubRef.current = unsubscribe;
+        } catch (err) {
+            console.warn("[Inbox] Intermittent realtime failure", err);
+        }
+
+        return () => {
+            if (unsubRef.current) unsubRef.current();
+        };
+    }, [isAuthenticated, user, isLoading, error, fetchConversations]);
 
     // Loading states
     if (authLoading || (!isAuthenticated && !error)) {

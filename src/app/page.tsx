@@ -12,6 +12,7 @@ import {
     mockHotels,
     mockTourOperators,
 } from "@/data/topRated";
+import { ProviderHomeRedirect } from "@/components/auth/ProviderHomeRedirect";
 
 const MobileSearchView = dynamic(
     () =>
@@ -76,6 +77,7 @@ export default async function HomePage() {
 
     return (
         <main className="min-h-screen bg-background">
+            <ProviderHomeRedirect />
             {/* Mobile View */}
             <div className="block md:hidden">
                 <MobileSearchView />

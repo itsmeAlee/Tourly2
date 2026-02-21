@@ -100,9 +100,10 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
                     return;
                 }
 
-                // 2. Security check: verify user is a participant
+                // 2. Security check: verify user is a participant strictly matching their active role
                 const isParticipant =
-                    conv.tourist_id === user!.id || conv.provider_id === user!.id;
+                    (user!.role === "tourist" && conv.tourist_id === user!.id) ||
+                    (user!.role === "provider" && conv.provider_id === user!.providerId);
 
                 if (!isParticipant) {
                     // Treat as not found — don't reveal conversation exists
@@ -161,11 +162,14 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
                 if (
                     response.events.some((e) => e.includes(".create"))
                 ) {
-                    // Avoid duplicating our own optimistic messages
+                    // ── Optimistic UI Deduplication ──
+                    // Avoid duplicating our own optimistic messages by checking if the incoming
+                    // real message text matches a temporary "pending" ID we injected previously.
                     setMessages((prev) => {
                         // Check if message already exists
                         if (prev.some((m) => m.$id === payload.$id)) return prev;
-                        // Remove any optimistic message with matching text
+
+                        // Remove any optimistic message with matching content and sender
                         const filtered = prev.filter(
                             (m) =>
                                 !(
@@ -180,7 +184,8 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
                     scrollToBottom();
 
                     // If the message is from the OTHER party, mark as read
-                    if (payload.sender_id !== user.id) {
+                    const myId = user.role === "provider" ? user.providerId : user.id;
+                    if (payload.sender_id !== myId) {
                         debouncedMarkRead();
                     }
                 }
@@ -191,6 +196,15 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
                 ) {
                     setMessages((prev) =>
                         prev.map((m) => (m.$id === payload.$id ? payload : m))
+                    );
+                }
+
+                // Handle deleted events (Safe Event Mapping)
+                if (
+                    response.events.some((e) => e.includes(".delete"))
+                ) {
+                    setMessages((prev) =>
+                        prev.filter((m) => m.$id !== payload.$id)
                     );
                 }
             });
@@ -250,6 +264,8 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
     const handleSend = useCallback(
         async (text: string) => {
             if (!user) return;
+            const myId = user.role === "provider" ? user.providerId : user.id;
+            if (!myId) return;
 
             // 1. Create optimistic message
             const optimisticMsg: MessageDocument = {
@@ -260,7 +276,7 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
                 $updatedAt: new Date().toISOString(),
                 $permissions: [],
                 conversation_id: conversationId,
-                sender_id: user.id,
+                sender_id: myId,
                 text,
                 is_read: false,
                 created_at: new Date().toISOString(),
@@ -273,7 +289,7 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
 
             try {
                 // 3. Send via service
-                const realMsg = await sendMessage(conversationId, user.id, text);
+                const realMsg = await sendMessage(conversationId, myId, text);
 
                 // 4. Replace optimistic with real message
                 setMessages((prev) =>
@@ -399,13 +415,16 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
 
                             {/* Messages for this date */}
                             <div className="space-y-3">
-                                {msgs.map((message) => (
-                                    <MessageBubble
-                                        key={message.$id}
-                                        message={message}
-                                        isCurrentUser={message.sender_id === user?.id}
-                                    />
-                                ))}
+                                {msgs.map((message) => {
+                                    const myId = user?.role === "provider" ? user?.providerId : user?.id;
+                                    return (
+                                        <MessageBubble
+                                            key={message.$id}
+                                            message={message}
+                                            isCurrentUser={message.sender_id === myId}
+                                        />
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}

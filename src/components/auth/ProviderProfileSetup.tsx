@@ -172,9 +172,12 @@ export function ProviderProfileSetup() {
             // Refresh auth so providerId is populated
             await refreshUser();
 
-            toast.success("Profile created! Welcome to Tourly.");
-            router.push("/dashboard");
-            router.refresh();
+            // Success, wait briefly to ensure state updates
+            setTimeout(() => {
+                toast.success("Profile created! Welcome to Tourly.");
+                router.push("/provider/dashboard");
+                router.refresh();
+            }, 500);
         } catch (err: unknown) {
             if (err instanceof AppwriteException) {
                 setServerError(

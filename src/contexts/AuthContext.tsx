@@ -48,7 +48,7 @@ interface AuthContextType {
     login: (
         email: string,
         password: string
-    ) => Promise<{ success: boolean; error?: string }>;
+    ) => Promise<{ success: boolean; error?: string; role?: "tourist" | "provider" }>;
 
     signup: (
         name: string,
@@ -186,7 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         async (
             email: string,
             password: string
-        ): Promise<{ success: boolean; error?: string }> => {
+        ): Promise<{ success: boolean; error?: string; role?: "tourist" | "provider" }> => {
             setIsLoading(true);
 
             try {
@@ -215,11 +215,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         : undefined;
 
                 // 5. Populate state
-                setUser(
-                    buildAuthUser(appwriteAccount, userDoc, providerDocId)
-                );
+                const user = buildAuthUser(appwriteAccount, userDoc, providerDocId);
+                setUser(user);
 
-                return { success: true };
+                return { success: true, role: user.role };
             } catch (err: unknown) {
                 // Appwrite throws typed errors with message + code
                 const message =

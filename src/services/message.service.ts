@@ -2,7 +2,7 @@ import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
 import { handleAppwriteError, AppError } from "@/lib/errors";
-import { updateConversationLastMessage } from "./conversation.service";
+import { updateConversationAfterMessage } from "./conversation.service";
 import type { MessageDocument } from "@/types/message.types";
 import type { ConversationDocument } from "@/types/conversation.types";
 
@@ -75,34 +75,22 @@ export async function sendMessage(
 
         // ── Side effects (best-effort, non-blocking) ────
 
-        // Update conversation last_message preview
-        updateConversationLastMessage(conversationId, trimmed).catch((err) =>
+        // Update conversation last_message preview and unread count
+        const roleToIncrement = isTourist ? "provider" : "tourist";
+        const unreadField = roleToIncrement === "provider" ? "provider_unread" : "tourist_unread";
+        const currentUnread = (conversation[unreadField] as number) ?? 0;
+
+        updateConversationAfterMessage(
+            conversationId,
+            trimmed,
+            roleToIncrement,
+            currentUnread
+        ).catch((err: unknown) =>
             console.warn(
-                "[MessageService] Failed to update last_message:",
+                "[MessageService] Failed to update conversation state:",
                 err
             )
         );
-
-        // Increment unread count for the OTHER party
-        const unreadField = isTourist
-            ? "provider_unread"
-            : "tourist_unread";
-        const currentUnread =
-            (conversation[unreadField] as number) ?? 0;
-
-        databases
-            .updateDocument(
-                DATABASE_ID,
-                COLLECTIONS.CONVERSATIONS,
-                conversationId,
-                { [unreadField]: currentUnread + 1 }
-            )
-            .catch((err) =>
-                console.warn(
-                    "[MessageService] Failed to increment unread:",
-                    err
-                )
-            );
 
         return messageDoc;
     } catch (err) {

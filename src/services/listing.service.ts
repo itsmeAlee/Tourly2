@@ -1,4 +1,4 @@
-import { ID, Query } from "appwrite";
+import { ID, Query, Permission, Role } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
 import { handleAppwriteError, AppError } from "@/lib/errors";
@@ -66,6 +66,12 @@ export async function createListing(
     let listingDoc: ListingDocument | null = null;
 
     try {
+        const defaultPermissions = [
+            Permission.read(Role.any()),
+            Permission.update(Role.user(input.provider_id)),
+            Permission.delete(Role.user(input.provider_id)),
+        ];
+
         // 1. Create the listing document
         const listingData: Record<string, unknown> = {
             provider_id: input.provider_id,
@@ -88,7 +94,8 @@ export async function createListing(
             DATABASE_ID,
             COLLECTIONS.LISTINGS,
             ID.unique(),
-            listingData as Omit<ListingDocument, keyof import("appwrite").Models.Document>
+            listingData as Omit<ListingDocument, keyof import("appwrite").Models.Document>,
+            defaultPermissions
         );
 
         // 2. Create the detail document
@@ -102,7 +109,8 @@ export async function createListing(
             DATABASE_ID,
             detailCollectionId,
             ID.unique(),
-            detailData
+            detailData,
+            defaultPermissions
         );
 
         return listingDoc;

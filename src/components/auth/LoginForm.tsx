@@ -49,8 +49,12 @@ export function LoginForm() {
         const result = await login(email, password);
 
         if (result.success) {
-            // Redirect to intended destination or home
-            router.push(redirectTo);
+            // Determine redirect
+            let finalRedirect = redirectTo;
+            if (result.role === "provider" && redirectTo === "/") {
+                finalRedirect = "/provider/dashboard";
+            }
+            router.push(finalRedirect);
             router.refresh();
         } else {
             setError(result.error || "Login failed. Please try again.");

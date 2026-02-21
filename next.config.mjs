@@ -12,6 +12,12 @@ const nextConfig = {
                 port: '',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'sgp.cloud.appwrite.io',
+                port: '',
+                pathname: '/**',
+            },
         ],
         unoptimized: false,
     },
