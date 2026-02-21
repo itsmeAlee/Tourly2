@@ -6,12 +6,14 @@ import { Search, User, Sparkles, MessageSquare, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TripAIModal } from "@/components/TripAIModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadCount } from "@/hooks/use-unread-count";
 
 type NavItemId = "explore" | "trip-ai" | "inbox" | "account" | "login";
 
 export function MobileBottomNav() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const unreadCount = useUnreadCount();
   const [activeItem, setActiveItem] = useState<NavItemId>("explore");
   const [isTripAIOpen, setIsTripAIOpen] = useState(false);
 
@@ -66,11 +68,18 @@ export function MobileBottomNav() {
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 className={cn(
-                  "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors rounded-xl",
+                  "relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors rounded-xl",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <Icon className={cn("w-6 h-6", isActive && "stroke-[2.5px]")} />
+                <div className="relative">
+                  <Icon className={cn("w-6 h-6", isActive && "stroke-[2.5px]")} />
+                  {item.id === "inbox" && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold border-2 border-background text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>
             );

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ChevronLeft, X, Search, Sparkles, MessageSquare } from "lucide-react";
+import { ChevronLeft, X, Search, Sparkles, MessageSquare, RefreshCw } from "lucide-react";
 
 // Components
 import { UnifiedSearchWidget } from "@/components/search/UnifiedSearchWidget";
@@ -16,13 +16,36 @@ import { EmptyState } from "@/components/search/EmptyState";
 import { ListingCard } from "@/components/ListingCard";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock Data
-import { mockHotels } from "@/data/topRated";
-import { mockVehicles } from "@/data/mockTransport";
-import { mockGuides } from "@/data/mockGuides";
+// Real data hook
+import { useSearch } from "@/hooks/use-search";
+import { mapListingToListingCard } from "@/lib/mappers";
 
 type ServiceType = "stays" | "transport" | "guides";
+
+// ─── Skeleton Loader ────────────────────────────────────
+
+function ResultsSkeleton() {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                    key={i}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                >
+                    <Skeleton className="aspect-[4/3] w-full" />
+                    <div className="p-4 pt-7 space-y-3">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-2/3" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 function SearchResultsContent() {
     const searchParams = useSearchParams();
@@ -49,8 +72,16 @@ function SearchResultsContent() {
     const checkIn = searchParams.get("checkIn") || "";
     const checkOut = searchParams.get("checkOut") || "";
     const guests = parseInt(searchParams.get("guests") || "2", 10);
+    const region = searchParams.get("region") || "";
 
-    // Filter state
+    // Real data via custom hook (debounced 400ms)
+    const { results, isLoading, error, totalCount, refetch } = useSearch({
+        type: type as ServiceType,
+        location,
+        region: region || undefined,
+    });
+
+    // Filter state (kept for existing filter UI — client-side filtering is acceptable for now)
     const [activeFilters, setActiveFilters] = useState<Record<string, string | boolean>>({});
 
     const handleFilterChange = (filterId: string, value: string | boolean | null) => {
@@ -69,110 +100,85 @@ function SearchResultsContent() {
         setActiveFilters({});
     };
 
-    // Filter data based on location (simple mock filtering)
-    const filteredHotels = useMemo(() => {
-        if (!location) return mockHotels;
-        return mockHotels.filter((hotel) =>
-            hotel.location.toLowerCase().includes(location.toLowerCase())
-        );
-    }, [location]);
-
-    const filteredVehicles = useMemo(() => {
-        if (!location) return mockVehicles;
-        return mockVehicles.filter((vehicle) =>
-            vehicle.location.toLowerCase().includes(location.toLowerCase())
-        );
-    }, [location]);
-
-    const filteredGuides = useMemo(() => {
-        if (!location) return mockGuides;
-        return mockGuides.filter((guide) =>
-            guide.location.toLowerCase().includes(location.toLowerCase())
-        );
-    }, [location]);
-
-    // Get results count and label
-    const getResultsInfo = () => {
+    // Results count label
+    const getResultLabel = () => {
         switch (type) {
             case "stays":
-                return {
-                    count: filteredHotels.length,
-                    label: filteredHotels.length === 1 ? "Stay" : "Stays",
-                };
+                return totalCount === 1 ? "Stay" : "Stays";
             case "transport":
-                return {
-                    count: filteredVehicles.length,
-                    label: filteredVehicles.length === 1 ? "Vehicle" : "Vehicles",
-                };
+                return totalCount === 1 ? "Vehicle" : "Vehicles";
             case "guides":
-                return {
-                    count: filteredGuides.length,
-                    label: filteredGuides.length === 1 ? "Guide" : "Guides",
-                };
+                return totalCount === 1 ? "Guide" : "Guides";
             default:
-                return { count: 0, label: "Results" };
+                return "Results";
         }
     };
 
-    const { count, label } = getResultsInfo();
-    const hasResults = count > 0;
+    const hasResults = totalCount > 0;
 
-    // Render the appropriate grid based on type
+    // Render results grid
     const renderResults = () => {
+        // Loading state — 8 skeleton cards
+        if (isLoading) {
+            return <ResultsSkeleton />;
+        }
+
+        // Error state — retry button
+        if (error) {
+            return (
+                <div className="flex flex-col items-center justify-center py-20 px-4">
+                    <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6">
+                        <RefreshCw className="w-10 h-10 text-red-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+                        Something went wrong
+                    </h3>
+                    <p className="text-gray-500 text-center max-w-md mb-6">
+                        {error}
+                    </p>
+                    <Button onClick={refetch} className="rounded-lg gap-2">
+                        <RefreshCw className="w-4 h-4" />
+                        Try again
+                    </Button>
+                </div>
+            );
+        }
+
+        // Empty state
         if (!hasResults) {
             return (
                 <EmptyState
-                    title={`No ${label.toLowerCase()} found`}
+                    title={`No ${getResultLabel().toLowerCase()} found`}
                     description={
                         location
-                            ? `We couldn't find any ${label.toLowerCase()} in ${location}. Try a different location or adjust your filters.`
-                            : `No ${label.toLowerCase()} available for your search criteria.`
+                            ? `We couldn't find any ${getResultLabel().toLowerCase()} in ${location}. Try a different location or adjust your filters.`
+                            : `No ${getResultLabel().toLowerCase()} available for your search criteria.`
                     }
                     onClearFilters={clearAllFilters}
                 />
             );
         }
 
-        switch (type) {
-            case "stays":
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredHotels.map((hotel) => (
-                            <ListingCard
-                                key={hotel.id}
-                                id={hotel.id}
-                                title={hotel.title}
-                                image={hotel.image}
-                                rating={hotel.rating}
-                                reviewCount={hotel.reviewCount}
-                                location={hotel.location}
-                                category="hotel"
-                            />
-                        ))}
-                    </div>
-                );
-
-            case "transport":
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredVehicles.map((vehicle) => (
-                            <TransportCard key={vehicle.id} vehicle={vehicle} />
-                        ))}
-                    </div>
-                );
-
-            case "guides":
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredGuides.map((guide) => (
-                            <GuideCard key={guide.id} guide={guide} />
-                        ))}
-                    </div>
-                );
-
-            default:
-                return null;
-        }
+        // Map results to card components
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {results.map((doc) => {
+                    const card = mapListingToListingCard(doc);
+                    return (
+                        <ListingCard
+                            key={card.id}
+                            id={card.id}
+                            title={card.title}
+                            image={card.image}
+                            rating={card.rating}
+                            reviewCount={card.reviewCount}
+                            location={card.location}
+                            category={card.category}
+                        />
+                    );
+                })}
+            </div>
+        );
     };
 
     return (
@@ -180,25 +186,21 @@ function SearchResultsContent() {
             {/* --- DESKTOP Header (Hidden on Mobile) --- */}
             <div className="hidden md:block sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
                 <div className="container mx-auto px-4 lg:px-8 py-4">
-                    {/* Logo + Service Tabs + NavLinks Row (Matches Homepage Navbar) */}
+                    {/* Logo + Service Tabs + NavLinks Row */}
                     <div className="flex items-center justify-between mb-4">
-                        {/* LEFT SECTION: Logo (fixed width for balance) */}
                         <div className="flex items-center shrink-0 lg:w-[200px]">
                             <Link href="/" className="text-2xl font-bold tracking-tight text-foreground">
                                 Tourly
                             </Link>
                         </div>
 
-                        {/* CENTER SECTION: Service Tabs */}
                         <div className="flex flex-1 items-center justify-center">
                             <Suspense fallback={<div className="h-8" />}>
                                 <ServiceTabs variant="underline" showIcons={true} />
                             </Suspense>
                         </div>
 
-                        {/* RIGHT SECTION: Nav Links + Login (fixed width for balance) */}
                         <div className="flex items-center justify-end gap-4 lg:w-[320px]">
-                            {/* Nav Links: About, Support, TripAI */}
                             <div className="flex items-center gap-6">
                                 <a
                                     href="#about"
@@ -221,14 +223,11 @@ function SearchResultsContent() {
                                     TripAI
                                 </Link>
                             </div>
-                            {/* Login Button */}
-                            <Button size="sm">
-                                Login
-                            </Button>
+                            <Button size="sm">Login</Button>
                         </div>
                     </div>
 
-                    {/* Unified Search Widget - Pre-filled with URL params */}
+                    {/* Unified Search Widget */}
                     <UnifiedSearchWidget
                         initialLocation={location}
                         initialCheckIn={checkIn}
@@ -241,9 +240,7 @@ function SearchResultsContent() {
                 </div>
             </div>
 
-            {/* --- MOBILE Header & App-Like Layout (Visible on Mobile) --- */}
-
-            {/* 1. Service-First Header (Sticky Top) */}
+            {/* --- MOBILE Header --- */}
             <header className="md:hidden sticky top-0 z-[60] bg-white border-b border-gray-100/50 shadow-sm">
                 <div className="flex items-center gap-1 px-2 h-14">
                     <button
@@ -252,7 +249,6 @@ function SearchResultsContent() {
                     >
                         <ChevronLeft size={20} />
                     </button>
-                    {/* Service Tabs in Header - compact spacing for mobile */}
                     <div className="flex items-center">
                         <Suspense fallback={<div className="h-6 w-20 bg-gray-100 rounded animate-pulse" />}>
                             <ServiceTabs variant="underline" />
@@ -260,7 +256,7 @@ function SearchResultsContent() {
                     </div>
                 </div>
 
-                {/* 2. Compact Summary Search Bar (Visible ONLY when collapsed) */}
+                {/* Compact Summary Search Bar */}
                 {!isMobileSearchExpanded && (
                     <div className="px-4 pb-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <button
@@ -284,18 +280,14 @@ function SearchResultsContent() {
                 )}
             </header>
 
-            {/* Expanded Search Dropdown (Mobile) - "Content-Hugging" */}
+            {/* Expanded Search Dropdown (Mobile) */}
             {isMobileSearchExpanded && (
                 <>
-                    {/* Backdrop (Closes on click) */}
                     <div
                         className="fixed inset-0 top-[56px] z-[40] bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 md:hidden"
                         onClick={() => setIsMobileSearchExpanded(false)}
                     />
-
-                    {/* Dropdown Form Container */}
                     <div className="fixed top-[56px] left-0 right-0 z-[50] bg-white rounded-b-3xl shadow-2xl overflow-hidden animate-in slide-in-from-top-5 duration-200 md:hidden">
-                        {/* 'X' Close Button - Absolute Top Right */}
                         <button
                             onClick={() => setIsMobileSearchExpanded(false)}
                             className="absolute top-3 right-3 p-2 rounded-full bg-gray-100/80 text-gray-500 hover:bg-gray-200 z-20"
@@ -303,25 +295,22 @@ function SearchResultsContent() {
                         >
                             <X size={20} />
                         </button>
-
                         <div className="p-4 pt-12 flex flex-col gap-4">
                             <UnifiedSearchWidget
                                 initialLocation={location}
                                 initialCheckIn={checkIn}
                                 initialCheckOut={checkOut}
                                 initialGuests={guests}
-                                showTabs={false} // Tabs are already in the sticky header
-                                variant="compact" // Uses white boxes + transparent bg (parent is white)
+                                showTabs={false}
+                                variant="compact"
                                 activeServiceType={type}
                                 onSearch={() => setIsMobileSearchExpanded(false)}
                             />
                         </div>
-                        {/* Little handle or border to show end of form */}
                         <div className="h-2 bg-gray-50/50 w-full border-t border-gray-100" />
                     </div>
                 </>
             )}
-            {/* -------------------------------------------------------- */}
 
             {/* Filter Bar */}
             <FilterBar
@@ -331,13 +320,12 @@ function SearchResultsContent() {
             />
 
             {/* Results Section */}
-            {/* Added padding-bottom for Mobile Bottom Nav */}
             <main className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8 min-content-height">
                 {/* Results Count Heading */}
-                {hasResults && (
+                {!isLoading && !error && hasResults && (
                     <div className="mb-6">
                         <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                            {count} {label} found
+                            {totalCount} {getResultLabel()} found
                             {location && (
                                 <span className="font-normal text-gray-500"> in {location}</span>
                             )}

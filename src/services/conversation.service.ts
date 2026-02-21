@@ -87,6 +87,53 @@ async function fetchListingTitle(listingId: string): Promise<string> {
 // ─── Conversation Service ───────────────────────────────
 
 /**
+ * Gets a single conversation by its document $id.
+ *
+ * Returns null if not found.
+ */
+export async function getConversationById(
+    conversationId: string
+): Promise<ConversationDocument | null> {
+    try {
+        return await databases.getDocument<ConversationDocument>(
+            DATABASE_ID,
+            COLLECTIONS.CONVERSATIONS,
+            conversationId
+        );
+    } catch (err) {
+        if (
+            err &&
+            typeof err === "object" &&
+            "code" in err &&
+            (err as { code: number }).code === 404
+        ) {
+            return null;
+        }
+        throw handleAppwriteError(err);
+    }
+}
+
+/**
+ * Gets a conversation enriched with participant display info.
+ *
+ * Returns null if not found.
+ */
+export async function getConversationWithParticipants(
+    conversationId: string
+): Promise<ConversationWithParticipants | null> {
+    const conv = await getConversationById(conversationId);
+    if (!conv) return null;
+
+    const [tourist, provider, listing_title] = await Promise.all([
+        fetchUserParticipant(conv.tourist_id),
+        fetchProviderParticipant(conv.provider_id),
+        fetchListingTitle(conv.listing_id),
+    ]);
+
+    return { ...conv, tourist, provider, listing_title };
+}
+
+/**
  * Gets or creates a conversation between a tourist and a provider
  * about a specific listing.
  *

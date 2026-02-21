@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -10,6 +10,7 @@ import {
     Compass,
     Briefcase,
     AlertCircle,
+    ArrowLeft,
 } from "lucide-react";
 import { ID, AppwriteException } from "appwrite";
 import { account, databases } from "@/lib/appwrite";
@@ -18,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { OtpInput } from "@/components/ui/OtpInput";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -99,6 +101,21 @@ export function SignupForm() {
     const [errors, setErrors] = useState<FormErrors>({});
     const [serverError, setServerError] = useState("");
 
+    // NEW: OTP Step State
+    const [step, setStep] = useState<"form" | "otp">("form");
+    const [unverifiedUserId, setUnverifiedUserId] = useState<string | null>(null);
+    const [otpCode, setOtpCode] = useState("");
+    const [otpTimer, setOtpTimer] = useState(60);
+    const [isResending, setIsResending] = useState(false);
+    const [resendAttempts, setResendAttempts] = useState(0);
+    const [otpError, setOtpError] = useState("");
+    const [failedAttempts, setFailedAttempts] = useState(0);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
+
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+
     const redirectTo = searchParams.get("next") || "/";
 
     // Clear field error on change
@@ -137,48 +154,16 @@ export function SignupForm() {
                 name.trim()
             );
 
-            // 2. Create a session (auto-login)
-            await account.createEmailPasswordSession(email, password);
+            // 2. Instead of session + verification link, send OTP token
+            await account.createEmailToken(newAccount.$id, email);
 
-            // 3. Send verification email
-            try {
-                const verifyUrl = `${window.location.origin}/verify-email`;
-                await account.createVerification(verifyUrl);
-            } catch {
-                // Non-critical — don't block signup if verification email fails
-                console.warn("[SignupForm] Failed to send verification email");
-            }
+            // 3. Store user ID for verification step
+            setUnverifiedUserId(newAccount.$id);
 
-            // 4. Create the users collection document
-            const now = new Date().toISOString();
-            await databases.createDocument(
-                DATABASE_ID,
-                COLLECTIONS.USERS,
-                ID.unique(),
-                {
-                    user_id: newAccount.$id,
-                    name: name.trim(),
-                    email,
-                    role: role!,
-                    is_email_verified: false,
-                    created_at: now,
-                }
-            );
+            // 4. Transition to OTP step
+            setStep("otp");
+            startTimer();
 
-            // 5. Refresh auth context
-            await refreshUser();
-
-            // 6. Route based on role
-            if (role === "provider") {
-                router.push("/signup/provider-profile");
-            } else {
-                toast.success(
-                    "Account created! Please check your email to verify your account."
-                );
-                router.push(redirectTo);
-            }
-
-            router.refresh();
         } catch (err: unknown) {
             if (err instanceof AppwriteException) {
                 switch (err.code) {
@@ -206,6 +191,238 @@ export function SignupForm() {
             setIsSubmitting(false);
         }
     };
+
+    // ── OTP Timer Logic ─────────────────────────────────────
+
+    // Using simple setInterval for timer
+    const startTimer = () => {
+        setOtpTimer(60);
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+            setOtpTimer((prev) => {
+                if (prev <= 1) {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    // Cleanup timer
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, []);
+
+    // ── Resend OTP ──────────────────────────────────────────
+
+    const handleResend = async () => {
+        if (!unverifiedUserId) return;
+
+        if (resendAttempts >= 3) {
+            setOtpError("Too many attempts. Please wait 10 minutes before trying again.");
+            return;
+        }
+
+        setIsResending(true);
+        setOtpError("");
+        setOtpCode("");
+
+        try {
+            await account.createEmailToken(unverifiedUserId, email);
+            setResendAttempts((prev) => prev + 1);
+            startTimer();
+            toast.success("New code sent to your email", { position: "bottom-center" });
+        } catch (err: unknown) {
+            setOtpError(err instanceof Error ? err.message : "Failed to resend code. Please try again.");
+        } finally {
+            setIsResending(false);
+        }
+    };
+
+    // ── Verify OTP ──────────────────────────────────────────
+
+    const handleVerify = async () => {
+        if (!unverifiedUserId || otpCode.length < 6 || isVerifying || isVerified) return;
+
+        setIsVerifying(true);
+        setOtpError("");
+
+        try {
+            // 1. Verify OTP and create session in one step
+            await account.createSession(unverifiedUserId, otpCode);
+
+            // 2. Mark as successfully verified UI
+            setIsVerified(true);
+
+            // 3. Create the users collection document NOW
+            const now = new Date().toISOString();
+            await databases.createDocument(
+                DATABASE_ID,
+                COLLECTIONS.USERS,
+                unverifiedUserId,
+                {
+                    user_id: unverifiedUserId,
+                    name: name.trim(),
+                    email,
+                    role: role!,
+                    is_email_verified: true, // always verified now
+                    created_at: now,
+                }
+            );
+
+            // 4. Refresh auth context since we now have a session
+            await refreshUser();
+
+            // 5. Short delay to show success UI, then route based on role
+            setTimeout(() => {
+                if (role === "provider") {
+                    router.push("/signup/provider-profile");
+                } else {
+                    router.push(redirectTo);
+                }
+                router.refresh();
+            }, 1000);
+
+        } catch (err: unknown) {
+            // Failed verification
+            setFailedAttempts((prev) => {
+                const newAttempts = prev + 1;
+                if (newAttempts >= 5) {
+                    setOtpError("Too many incorrect attempts. Please request a new code.");
+                    setOtpTimer(0); // Allow resend immediately
+                    if (timerRef.current) clearInterval(timerRef.current);
+                } else {
+                    setOtpError("Incorrect code. Please try again.");
+                }
+                return newAttempts;
+            });
+
+            if (err instanceof Error && err.message.includes("expired")) {
+                setOtpError("Your code has expired. Please request a new one.");
+                setOtpTimer(0);
+                if (timerRef.current) clearInterval(timerRef.current);
+            } else if (err instanceof Error && !err.message.includes("Invalid")) {
+                setOtpError("Connection error. Please check your internet and try again.");
+            }
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    // Back button handling
+    const handleBackToForm = () => {
+        const confirmBack = window.confirm("Going back will cancel the verification process. You will need to use a different email or try again if the account was partially created.");
+        if (confirmBack) {
+            setStep("form");
+            // Note: The unverified Appwrite account will be orphaned until cleaned up automatically
+            setOtpCode("");
+            setOtpError("");
+            setServerError("");
+            if (timerRef.current) clearInterval(timerRef.current);
+        }
+    };
+
+    // Auto-verify when 6 digits are entered
+    useEffect(() => { // Changed React.useEffect to useEffect
+        if (otpCode.length === 6 && !otpError && failedAttempts < 5) {
+            // Let the user click or we can auto-trigger. The prompt says "All 6 boxes must be filled before the verify button is enabled". I will rely on the button click.
+        }
+    }, [otpCode, otpError, failedAttempts]);
+
+    if (step === "otp") {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-lg p-8 animate-in fade-in zoom-in duration-300">
+                    <div className="text-center mb-6">
+                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">✉️</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-foreground mb-2">
+                            Check your email
+                        </h2>
+                        <p className="text-muted-foreground mb-1">
+                            We sent a 6-digit code to:
+                        </p>
+                        <p className="font-semibold text-foreground">
+                            {email}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            Didn&apos;t receive it? Check your spam folder.
+                        </p>
+                    </div>
+
+                    <div className="my-8">
+                        <OtpInput
+                            length={6}
+                            value={otpCode}
+                            onChange={(val) => {
+                                setOtpCode(val.padEnd(6, ' '));
+                                setOtpError(""); // clear error on typing
+                            }}
+                            isDisabled={isVerifying || isVerified || failedAttempts >= 5}
+                            hasError={!!otpError}
+                        />
+                        {otpError && (
+                            <p className="text-center text-sm text-red-500 mt-4 animate-in fade-in">
+                                {otpError}
+                            </p>
+                        )}
+                        {isVerified && (
+                            <div className="flex items-center justify-center gap-2 text-green-600 mt-4 animate-in fade-in">
+                                <span>Email verified! Setting up your account...</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <Button
+                        onClick={handleVerify}
+                        disabled={otpCode.replace(/\s/g, '').length < 6 || isVerifying || isVerified || failedAttempts >= 5}
+                        className="w-full h-12 text-base font-semibold rounded-xl mb-6"
+                    >
+                        {isVerifying ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isVerified ? (
+                            "Verified"
+                        ) : (
+                            "Verify & Create Account"
+                        )}
+                    </Button>
+
+                    <div className="text-center mb-6">
+                        {otpTimer > 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                                Resend code in <span className="font-medium text-foreground">0:{otpTimer.toString().padStart(2, "0")}</span>
+                            </p>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleResend}
+                                disabled={isResending || resendAttempts >= 3}
+                                className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                            >
+                                {isResending ? "Sending..." : "Resend code"}
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="text-center">
+                        <button
+                            type="button"
+                            onClick={handleBackToForm}
+                            disabled={isVerifying || isVerified}
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1 mx-auto"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to signup form
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

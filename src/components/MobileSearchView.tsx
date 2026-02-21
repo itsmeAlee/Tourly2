@@ -21,8 +21,13 @@ import { Bed, Car, Users, MapPin, Calendar, User, Compass, Minus, Plus } from "l
 import { cn } from "@/lib/utils";
 import { useSmartDateRange } from "@/hooks/use-smart-date-range";
 import { TopRatedSection } from "./TopRatedSection";
-import { mockGuides, mockHotels, mockTourOperators } from "@/data/topRated";
 import { ServiceTabs } from "@/components/ServiceTabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getTopListings } from "@/services/listing.service";
+import { mapListingToTopRatedItem, type TopRatedItem } from "@/lib/mappers";
+
+// TODO: Remove mock data fallback once Appwrite listings are populated
+import { mockGuides, mockHotels, mockTourOperators } from "@/data/topRated";
 
 const services = [
   { id: "stays", label: "Stays", icon: Bed },
@@ -52,6 +57,34 @@ export function MobileSearchView() {
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const searchFormRef = useRef<HTMLDivElement>(null);
+
+  // ── Real data state for top-rated sections ──
+  const [hotelItems, setHotelItems] = useState<TopRatedItem[]>(mockHotels);
+  const [transportItems, setTransportItems] = useState<TopRatedItem[]>(mockTourOperators);
+  const [guideItems, setGuideItems] = useState<TopRatedItem[]>(mockGuides);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+
+  // Fetch real data on mount — fall back to mocks on error
+  useEffect(() => {
+    async function fetchTopRated() {
+      try {
+        const [stays, transports, guides] = await Promise.all([
+          getTopListings("stay", 6),
+          getTopListings("transport", 6),
+          getTopListings("guide", 6),
+        ]);
+        if (stays.length > 0) setHotelItems(stays.map(mapListingToTopRatedItem));
+        if (transports.length > 0) setTransportItems(transports.map(mapListingToTopRatedItem));
+        if (guides.length > 0) setGuideItems(guides.map(mapListingToTopRatedItem));
+      } catch (err) {
+        console.error("[MobileSearchView] Failed to fetch top rated:", err);
+        // Keep mock data as fallback — already set as initial state
+      } finally {
+        setIsDataLoading(false);
+      }
+    }
+    fetchTopRated();
+  }, []);
 
   // Intersection Observer for sticky detection - triggers when search form leaves viewport
   useEffect(() => {
@@ -430,32 +463,35 @@ export function MobileSearchView() {
 
       {/* Top Rated Sections */}
       <div className="mt-8">
-        {/* Top Rated Hotels */}
-        <TopRatedSection
-          title="Top Rated Hotels"
-          subtitle="Handpicked accommodations loved by travelers"
-          category="hotel"
-          items={mockHotels}
-          viewAllHref="/hotels"
-        />
+        {hotelItems.length > 0 && (
+          <TopRatedSection
+            title="Top Rated Hotels"
+            subtitle="Handpicked accommodations loved by travelers"
+            category="hotel"
+            items={hotelItems}
+            viewAllHref="/hotels"
+          />
+        )}
 
-        {/* Top Rated Tour Operators */}
-        <TopRatedSection
-          title="Top Rated Tour Operators"
-          subtitle="Trusted agencies for your perfect adventure"
-          category="tour-operator"
-          items={mockTourOperators}
-          viewAllHref="/tour-operators"
-        />
+        {transportItems.length > 0 && (
+          <TopRatedSection
+            title="Top Rated Tour Operators"
+            subtitle="Trusted agencies for your perfect adventure"
+            category="tour-operator"
+            items={transportItems}
+            viewAllHref="/tour-operators"
+          />
+        )}
 
-        {/* Top Rated Guides */}
-        <TopRatedSection
-          title="Top Rated Guides"
-          subtitle="Expert local guides for unforgettable experiences"
-          category="guide"
-          items={mockGuides}
-          viewAllHref="/guides"
-        />
+        {guideItems.length > 0 && (
+          <TopRatedSection
+            title="Top Rated Guides"
+            subtitle="Expert local guides for unforgettable experiences"
+            category="guide"
+            items={guideItems}
+            viewAllHref="/guides"
+          />
+        )}
       </div>
     </div>
   );

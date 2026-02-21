@@ -1,3 +1,4 @@
+// DEPRECATED: This file is kept for reference only. Do not import in new code.
 export interface TopRatedListingItem {
     id: string;
     title: string;

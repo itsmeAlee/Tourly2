@@ -1,3 +1,4 @@
+// DEPRECATED: This file is kept for reference only. Do not import in new code.
 // Mock data for provider profiles
 import type { Listing } from '@/components/listing/types';
 import { MOCK_LISTINGS, getAllListings } from '@/components/listing/mock-data';

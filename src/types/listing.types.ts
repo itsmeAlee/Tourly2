@@ -25,17 +25,26 @@ export interface ListingDocument extends Models.Document {
     /** Markdown/text description. */
     description: string;
 
-    /** Operating region. */
+    /** Specific location (e.g. "Upper Kachura, Skardu"). */
+    location: string;
+
+    /** Operating region (e.g. "Skardu", "Hunza Valley"). */
     region: string;
 
     /** Base price. */
     price: number;
 
-    /** Price unit for display (e.g. "per night"). */
-    price_unit: PriceUnit;
+    /** Price unit for display (e.g. "night"). */
+    price_unit: string;
 
     /** Array of Appwrite Storage file IDs for gallery images. */
     images: string[];
+
+    /** Short highlight strings (e.g. "Free Wi-Fi", "4x4"). */
+    highlights: string[];
+
+    /** Whether the listing is visible to tourists. */
+    is_active: boolean;
 
     /** Average rating (0–5). */
     rating: number;
@@ -43,27 +52,30 @@ export interface ListingDocument extends Models.Document {
     /** Total review count. */
     review_count: number;
 
-    /** Whether the listing is visible to tourists. */
-    is_active: boolean;
-
     /** ISO-8601 creation timestamp. */
     created_at: string;
 }
 
 // ─── Stay Details ───────────────────────────────────────
 
+/**
+ * Mirrors the `stay-details` Appwrite collection.
+ *
+ * Attributes: listing_id, guests, bedrooms, beds, bathrooms,
+ * amenities[], landmark, how_to_reach
+ */
 export interface StayDetailsDocument extends Models.Document {
     /** Parent listing $id. */
     listing_id: string;
 
-    /** e.g. "hotel", "guesthouse", "camping". */
-    property_type: string;
-
-    /** Number of guests the property can accommodate. */
-    max_guests: number;
+    /** Number of guests. */
+    guests: number;
 
     /** Number of bedrooms. */
     bedrooms: number;
+
+    /** Number of beds. */
+    beds: number;
 
     /** Number of bathrooms. */
     bathrooms: number;
@@ -71,58 +83,82 @@ export interface StayDetailsDocument extends Models.Document {
     /** Amenities list: ["wifi", "breakfast", "parking", …]. */
     amenities: string[];
 
-    /** Check-in time (e.g. "14:00"). */
-    check_in_time?: string;
+    /** Nearby landmark. */
+    landmark?: string;
 
-    /** Check-out time (e.g. "11:00"). */
-    check_out_time?: string;
+    /** How to reach the property. */
+    how_to_reach?: string;
 }
 
 // ─── Transport Details ──────────────────────────────────
 
+/**
+ * Mirrors the `transport-details` Appwrite collection.
+ *
+ * Attributes: listing_id, make, model, year, four_wd, fuel_included,
+ * transmission, seats, routes[], terrains[], driver_experience
+ */
 export interface TransportDetailsDocument extends Models.Document {
     /** Parent listing $id. */
     listing_id: string;
 
-    /** Vehicle type: "jeep", "coaster", "sedan", etc. */
-    vehicle_type: string;
+    /** Vehicle make (e.g. "Toyota"). */
+    make: string;
 
-    /** Passenger capacity. */
-    capacity: number;
-
-    /** Vehicle model / make. */
-    model?: string;
+    /** Vehicle model (e.g. "Land Cruiser"). */
+    model: string;
 
     /** Year of manufacture. */
-    year?: number;
+    year: number;
 
-    /** Features: ["ac", "4x4", "gps", …]. */
-    features: string[];
+    /** Whether it's 4WD. */
+    four_wd: boolean;
 
-    /** Whether a driver is included. */
-    driver_included: boolean;
+    /** Whether fuel is included. */
+    fuel_included: boolean;
+
+    /** Transmission type (e.g. "Manual", "Automatic"). */
+    transmission: string;
+
+    /** Passenger seats. */
+    seats: number;
+
+    /** Routes this vehicle covers. */
+    routes: string[];
+
+    /** Terrain types (e.g. "Mountain", "Off-road"). */
+    terrains: string[];
+
+    /** Driver experience description. */
+    driver_experience?: string;
 }
 
 // ─── Guide Details ──────────────────────────────────────
 
+/**
+ * Mirrors the `guide-details` Appwrite collection.
+ *
+ * Attributes: listing_id, certifications[], trek_routes[],
+ * max_group_size, experience_years, equipment_provided[]
+ */
 export interface GuideDetailsDocument extends Models.Document {
     /** Parent listing $id. */
     listing_id: string;
 
-    /** Specialization: "trekking", "cultural", "mountaineering", etc. */
-    specialization: string;
+    /** Certifications or licenses. */
+    certifications: string[];
+
+    /** Trek routes this guide covers. */
+    trek_routes: string[];
+
+    /** Maximum group size. */
+    max_group_size: number;
 
     /** Years of experience. */
     experience_years: number;
 
-    /** Languages the guide speaks. */
-    languages: string[];
-
-    /** Certifications or licenses. */
-    certifications?: string[];
-
-    /** Maximum group size. */
-    max_group_size?: number;
+    /** Equipment provided by the guide. */
+    equipment_provided: string[];
 }
 
 // ─── Composite ──────────────────────────────────────────
@@ -143,10 +179,12 @@ interface CreateListingBase {
     provider_id: string;
     title: string;
     description: string;
+    location: string;
     region: string;
     price: number;
-    price_unit: PriceUnit;
+    price_unit: string;
     images?: string[];
+    highlights?: string[];
     is_active?: boolean;
     created_at?: string;
 }
@@ -179,10 +217,12 @@ export type CreateListingInput =
 export interface UpdateListingInput {
     title?: string;
     description?: string;
+    location?: string;
     region?: string;
     price?: number;
-    price_unit?: PriceUnit;
+    price_unit?: string;
     images?: string[];
+    highlights?: string[];
     is_active?: boolean;
     /** Optional: update the detail document too. */
     details?: Record<string, unknown>;

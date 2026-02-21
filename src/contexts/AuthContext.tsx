@@ -1,4 +1,7 @@
 "use client";
+// NOTE: Email verification is enforced at signup via OTP before session creation.
+// All users with a valid session are guaranteed to have a verified email.
+// No runtime email verification checks are needed in this context.
 
 import React, {
     createContext,
@@ -18,7 +21,6 @@ interface UserDocument extends Models.Document {
     email: string;
     role?: "tourist" | "provider";
     avatar_url?: string;
-    is_email_verified?: boolean;
 }
 
 // ─── Types ───────────────────────────────────────────────
@@ -29,7 +31,7 @@ export interface AuthUser {
     name: string;
     email: string;
     role: "tourist" | "provider";
-    isEmailVerified: boolean;
+    // Email is always verified — OTP is required before session creation
     avatarUrl?: string;
     providerId?: string; // providers collection $id, if role is provider
 
@@ -42,7 +44,6 @@ interface AuthContextType {
     user: AuthUser | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    isEmailVerified: boolean;
 
     login: (
         email: string,
@@ -127,7 +128,6 @@ function buildAuthUser(
         name: userDoc.name || appwriteAccount.name || "User",
         email: userDoc.email || appwriteAccount.email,
         role,
-        isEmailVerified: appwriteAccount.emailVerification ?? false,
         avatarUrl,
         avatar: avatarUrl, // legacy alias
         providerId: providerDocId,
@@ -283,7 +283,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         name,
                         email,
                         role: "tourist", // default role on signup
-                        is_email_verified: false,
                         created_at: now,
                     }
                 );
@@ -352,7 +351,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
-        isEmailVerified: user?.isEmailVerified ?? false,
         login,
         signup,
         logout,

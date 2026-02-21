@@ -72,10 +72,12 @@ export async function createListing(
             type: input.type,
             title: input.title,
             description: input.description,
+            location: input.location,
             region: input.region,
             price: input.price,
             price_unit: input.price_unit,
             images: input.images ?? [],
+            highlights: input.highlights ?? [],
             rating: 0,
             review_count: 0,
             is_active: input.is_active ?? true,
@@ -232,6 +234,36 @@ export async function getListingsByRegion(
             listings: response.documents,
             total: response.total,
         };
+    } catch (err) {
+        throw handleAppwriteError(err);
+    }
+}
+
+/**
+ * Gets top-rated active listings by type across all regions.
+ *
+ * Used by the homepage to populate TopRatedSection components.
+ * Ordered by rating descending, then by review_count descending.
+ *
+ * @param type   Listing type filter (stay, transport, guide).
+ * @param limit  Max results (default 6).
+ */
+export async function getTopListings(
+    type: ListingType,
+    limit: number = 6
+): Promise<ListingDocument[]> {
+    try {
+        const response = await databases.listDocuments<ListingDocument>(
+            DATABASE_ID,
+            COLLECTIONS.LISTINGS,
+            [
+                Query.equal("type", type),
+                Query.equal("is_active", true),
+                Query.orderDesc("rating"),
+                Query.limit(limit),
+            ]
+        );
+        return response.documents;
     } catch (err) {
         throw handleAppwriteError(err);
     }

@@ -3,15 +3,29 @@ import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { TopRatedSection } from "@/components/TopRatedSection";
-import { mockGuides, mockHotels, mockTourOperators } from "@/data/topRated";
+import { getTopListings } from "@/services/listing.service";
+import { mapListingToTopRatedItem } from "@/lib/mappers";
+
+// TODO: Remove mock data fallback once Appwrite listings are populated
+import {
+    mockGuides,
+    mockHotels,
+    mockTourOperators,
+} from "@/data/topRated";
 
 const MobileSearchView = dynamic(
-    () => import("@/components/MobileSearchView").then((mod) => mod.MobileSearchView),
+    () =>
+        import("@/components/MobileSearchView").then(
+            (mod) => mod.MobileSearchView
+        ),
     { ssr: true }
 );
 
 const MobileBottomNav = dynamic(
-    () => import("@/components/MobileBottomNav").then((mod) => mod.MobileBottomNav),
+    () =>
+        import("@/components/MobileBottomNav").then(
+            (mod) => mod.MobileBottomNav
+        ),
     { ssr: true }
 );
 
@@ -28,7 +42,38 @@ export const metadata: Metadata = {
     },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+    // Fetch all three categories in PARALLEL — never sequential
+    let [stays, transport, guides] = await Promise.all([
+        getTopListings("stay", 6).catch((err) => {
+            console.error("[HomePage] Failed to fetch stays:", err);
+            return null; // Signal to use mock fallback
+        }),
+        getTopListings("transport", 6).catch((err) => {
+            console.error("[HomePage] Failed to fetch transport:", err);
+            return null;
+        }),
+        getTopListings("guide", 6).catch((err) => {
+            console.error("[HomePage] Failed to fetch guides:", err);
+            return null;
+        }),
+    ]);
+
+    // Map Appwrite documents → TopRatedItem shape
+    // Fall back to mock data if Appwrite errored (null), not if simply empty ([])
+    const hotelItems =
+        stays !== null
+            ? stays.map(mapListingToTopRatedItem)
+            : mockHotels;
+    const transportItems =
+        transport !== null
+            ? transport.map(mapListingToTopRatedItem)
+            : mockTourOperators;
+    const guideItems =
+        guides !== null
+            ? guides.map(mapListingToTopRatedItem)
+            : mockGuides;
+
     return (
         <main className="min-h-screen bg-background">
             {/* Mobile View */}
@@ -44,32 +89,38 @@ export default function HomePage() {
 
                 {/* Top Rated Listings */}
                 <div className="container mx-auto px-4">
-                    {/* Top Rated Hotels */}
-                    <TopRatedSection
-                        title="Top Rated Hotels"
-                        subtitle="Handpicked accommodations loved by travelers"
-                        category="hotel"
-                        items={mockHotels}
-                        viewAllHref="/hotels"
-                    />
+                    {/* Top Rated Hotels — hidden if 0 results */}
+                    {hotelItems.length > 0 && (
+                        <TopRatedSection
+                            title="Top Rated Hotels"
+                            subtitle="Handpicked accommodations loved by travelers"
+                            category="hotel"
+                            items={hotelItems}
+                            viewAllHref="/hotels"
+                        />
+                    )}
 
-                    {/* Top Rated Tour Operators */}
-                    <TopRatedSection
-                        title="Top Rated Tour Operators"
-                        subtitle="Trusted agencies for your perfect adventure"
-                        category="tour-operator"
-                        items={mockTourOperators}
-                        viewAllHref="/tour-operators"
-                    />
+                    {/* Top Rated Tour Operators — hidden if 0 results */}
+                    {transportItems.length > 0 && (
+                        <TopRatedSection
+                            title="Top Rated Tour Operators"
+                            subtitle="Trusted agencies for your perfect adventure"
+                            category="tour-operator"
+                            items={transportItems}
+                            viewAllHref="/tour-operators"
+                        />
+                    )}
 
-                    {/* Top Rated Guides */}
-                    <TopRatedSection
-                        title="Top Rated Guides"
-                        subtitle="Expert local guides for unforgettable experiences"
-                        category="guide"
-                        items={mockGuides}
-                        viewAllHref="/guides"
-                    />
+                    {/* Top Rated Guides — hidden if 0 results */}
+                    {guideItems.length > 0 && (
+                        <TopRatedSection
+                            title="Top Rated Guides"
+                            subtitle="Expert local guides for unforgettable experiences"
+                            category="guide"
+                            items={guideItems}
+                            viewAllHref="/guides"
+                        />
+                    )}
                 </div>
 
                 {/* Footer Spacer */}

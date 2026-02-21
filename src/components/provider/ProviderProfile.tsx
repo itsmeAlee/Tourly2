@@ -6,7 +6,7 @@ import { ArrowLeft, Heart, MessageCircle, BadgeCheck, MapPin, Languages, Clock }
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { Provider } from "@/data/mockProviders";
+import type { PublicProviderProfile as Provider } from "@/lib/mappers";
 import type { Listing } from "@/components/listing/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

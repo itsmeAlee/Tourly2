@@ -1,3 +1,4 @@
+// DEPRECATED: This file is kept for reference only. Do not import in new code.
 // Mock data for a hotel in Skardu
 export const mockHotelData = {
     id: "serene-palace-skardu",

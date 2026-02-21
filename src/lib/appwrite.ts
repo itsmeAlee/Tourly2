@@ -8,9 +8,22 @@ import { Client, Account, Databases, Storage } from "appwrite";
  *
  * @see https://appwrite.io/docs/sdks#client
  */
-const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+
+const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+
+if (!ENDPOINT || !PROJECT_ID) {
+    console.warn(
+        "[Appwrite] Missing env vars NEXT_PUBLIC_APPWRITE_ENDPOINT or NEXT_PUBLIC_APPWRITE_PROJECT_ID. " +
+        "Appwrite calls will fail until these are set in .env.local."
+    );
+}
+
+const client = new Client();
+
+// Only configure if env vars exist — prevents crash during build/ISR
+if (ENDPOINT) client.setEndpoint(ENDPOINT);
+if (PROJECT_ID) client.setProject(PROJECT_ID);
 
 /** Appwrite Account service — auth operations (login, signup, sessions). */
 export const account = new Account(client);

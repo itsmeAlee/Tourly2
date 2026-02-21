@@ -1,18 +1,15 @@
-import { getAllConversations } from '@/data/mockMessages';
-import { InboxList } from '@/components/inbox/InboxList';
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
+import { InboxPageClient } from "@/components/inbox/InboxPageClient";
 
 export const metadata: Metadata = {
-    title: 'Inbox | Tourly',
-    description: 'View and manage your conversations with service providers.',
+    title: "Inbox | Tourly",
+    description: "View and manage your conversations with service providers.",
     robots: {
-        index: false, // Don't index personal inbox pages
+        index: false,
         follow: false,
     },
 };
 
 export default function InboxPage() {
-    const conversations = getAllConversations();
-
-    return <InboxList conversations={conversations} />;
+    return <InboxPageClient />;
 }

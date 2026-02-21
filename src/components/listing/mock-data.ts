@@ -1,3 +1,4 @@
+// DEPRECATED: This file is kept for reference only. Do not import in new code.
 // Mock data for the Tourly Listing Detail Page
 // Features Northern Pakistan imagery and realistic content
 

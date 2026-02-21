@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { ServiceTabs } from "@/components/ServiceTabs";
 import { LogoutConfirmModal } from "@/components/auth/LogoutConfirmModal";
 import Link from "next/link";
+import { useUnreadCount } from "@/hooks/use-unread-count";
 
 // Wrapper component for ServiceTabs with Suspense (used in center sticky nav)
 function ServiceTabsWithSuspense({ className }: { className?: string }) {
@@ -20,7 +21,7 @@ function ServiceTabsWithSuspense({ className }: { className?: string }) {
 }
 
 // Right-side navigation links (desktop)
-function NavLinks({ className }: { className?: string }) {
+function NavLinks({ className, unreadCount }: { className?: string; unreadCount: number }) {
   return (
     <div className={cn("flex items-center gap-6", className)}>
       <a
@@ -31,10 +32,15 @@ function NavLinks({ className }: { className?: string }) {
       </a>
       <Link
         href="/inbox"
-        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        className="relative flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
         <MessageSquare className="w-4 h-4" />
         Inbox
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-4 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
       </Link>
       <Link
         href="/ai-planner"
@@ -135,6 +141,7 @@ export function Navbar() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isSearchHidden } = useSearch();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const unreadCount = useUnreadCount();
 
   return (
     <header
@@ -182,7 +189,7 @@ export function Navbar() {
           {/* RIGHT SECTION: Navigation Links + Auth Buttons (fixed width for balance) */}
           <div className="hidden lg:flex items-center justify-end gap-4 lg:w-[320px]">
             {/* Nav Links: About, Inbox, TripAI */}
-            <NavLinks />
+            <NavLinks unreadCount={unreadCount} />
 
             {/* Auth Section */}
             <AuthSection />
@@ -216,10 +223,17 @@ export function Navbar() {
               </a>
               <Link
                 href="/inbox"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                className="flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
               >
-                <MessageSquare className="w-4 h-4" />
-                Inbox
+                <div className="flex items-center gap-1.5">
+                  <MessageSquare className="w-4 h-4" />
+                  Inbox
+                </div>
+                {unreadCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
               <Link
                 href="/ai-planner"
