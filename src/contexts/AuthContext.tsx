@@ -9,6 +9,7 @@ import React, {
     useState,
     useEffect,
     useCallback,
+    useMemo,
 } from "react";
 import { Query, type Models } from "appwrite";
 import { account, databases } from "@/lib/appwrite";
@@ -346,15 +347,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // ── Context Value ────────────────────────────────────
 
-    const value: AuthContextType = {
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        login,
-        signup,
-        logout,
-        refreshUser,
-    };
+    const value: AuthContextType = useMemo(
+        () => ({
+            user,
+            isLoading,
+            isAuthenticated: !!user,
+            login,
+            signup,
+            logout,
+            refreshUser,
+        }),
+        [user, isLoading, login, signup, logout, refreshUser]
+    );
 
     return (
         <AuthContext.Provider value={value}>
