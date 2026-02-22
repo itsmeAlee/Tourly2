@@ -33,11 +33,6 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
         console.log('Message provider:', provider.id);
     };
 
-    // Group listings by type
-    const stayListings = listings.filter(l => l.type === 'stay');
-    const transportListings = listings.filter(l => l.type === 'transport');
-    const guideListings = listings.filter(l => l.type === 'guide');
-
     return (
         <>
             {/* Header */}
