@@ -26,6 +26,14 @@ export function useUnreadCount(): number {
             return;
         }
 
+        const participantId =
+            user.role === "provider" ? user.providerId : user.id;
+
+        if (!participantId) {
+            setUnreadCount(0);
+            return;
+        }
+
         try {
             const field =
                 user.role === "tourist" ? "tourist_id" : "provider_id";
@@ -35,7 +43,7 @@ export function useUnreadCount(): number {
             const res = await databases.listDocuments<ConversationDocument>(
                 DATABASE_ID,
                 COLLECTIONS.CONVERSATIONS,
-                [Query.equal(field, user.id), Query.limit(100)]
+                [Query.equal(field, participantId), Query.limit(100)]
             );
 
             const total = res.documents.reduce(
@@ -68,9 +76,10 @@ export function useUnreadCount(): number {
             const unsubscribe = client.subscribe(channel, (response) => {
                 // Check if the event involves our user's conversations
                 const payload = response.payload as ConversationDocument;
+                const providerParticipant = user.providerId;
                 const isParticipant =
                     payload.tourist_id === user.id ||
-                    payload.provider_id === user.id;
+                    (providerParticipant ? payload.provider_id === providerParticipant : false);
 
                 if (!isParticipant) return;
 

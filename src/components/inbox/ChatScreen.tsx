@@ -90,6 +90,14 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
 
         async function loadData() {
             try {
+                const currentParticipantId =
+                    user!.role === "provider" ? user!.providerId : user!.id;
+
+                if (!currentParticipantId) {
+                    setScreenState("not-found");
+                    return;
+                }
+
                 // 1. Fetch conversation
                 const conv = await getConversationWithParticipants(conversationId);
 
@@ -102,8 +110,8 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
 
                 // 2. Security check: verify user is a participant strictly matching their active role
                 const isParticipant =
-                    (user!.role === "tourist" && conv.tourist_id === user!.id) ||
-                    (user!.role === "provider" && conv.provider_id === user!.providerId);
+                    (user!.role === "tourist" && conv.tourist_id === currentParticipantId) ||
+                    (user!.role === "provider" && conv.provider_id === currentParticipantId);
 
                 if (!isParticipant) {
                     // Treat as not found — don't reveal conversation exists

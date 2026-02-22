@@ -158,7 +158,7 @@ export function ProviderCreateListingClient() {
             };
 
             // 4. Send to Appwrite via service layer
-            await createListing(payload);
+            await createListing(payload, user.id);
 
             toast({
                 title: "Success!",

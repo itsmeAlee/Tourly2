@@ -61,15 +61,16 @@ async function fetchDetailDocument(
  * back (deleted).
  */
 export async function createListing(
-    input: CreateListingInput
+    input: CreateListingInput,
+    actorUserId: string
 ): Promise<ListingDocument> {
     let listingDoc: ListingDocument | null = null;
 
     try {
-        const defaultPermissions = [
+        const ownerPermissions = [
             Permission.read(Role.any()),
-            Permission.update(Role.user(input.provider_id)),
-            Permission.delete(Role.user(input.provider_id)),
+            Permission.update(Role.user(actorUserId)),
+            Permission.delete(Role.user(actorUserId)),
         ];
 
         // 1. Create the listing document
@@ -95,7 +96,7 @@ export async function createListing(
             COLLECTIONS.LISTINGS,
             ID.unique(),
             listingData as Omit<ListingDocument, keyof import("appwrite").Models.Document>,
-            defaultPermissions
+            ownerPermissions
         );
 
         // 2. Create the detail document
@@ -110,7 +111,7 @@ export async function createListing(
             detailCollectionId,
             ID.unique(),
             detailData,
-            defaultPermissions
+            ownerPermissions
         );
 
         return listingDoc;

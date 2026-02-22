@@ -19,10 +19,12 @@ export function ProviderGuard({ children }: { children: React.ReactNode }) {
             router.replace("/login?next=/provider/dashboard");
         } else if (!isLoading && isAuthenticated && user?.role !== "provider") {
             router.replace("/");
+        } else if (!isLoading && isAuthenticated && user?.role === "provider" && !user?.providerId) {
+            router.replace("/signup/provider-profile");
         }
     }, [isLoading, isAuthenticated, user, router]);
 
-    if (!mounted || isLoading || !isAuthenticated || user?.role !== "provider") {
+    if (!mounted || isLoading || !isAuthenticated || user?.role !== "provider" || !user?.providerId) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />

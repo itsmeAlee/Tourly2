@@ -15,6 +15,9 @@ export interface ConversationDocument extends Models.Document {
     /** Provider document $id. */
     provider_id: string;
 
+    /** ISO-8601 creation timestamp. */
+    created_at: string;
+
     /** Preview of the last message in the thread. */
     last_message?: string;
 
@@ -58,6 +61,7 @@ export interface CreateConversationInput {
     listing_id: string;
     tourist_id: string;
     provider_id: string;
+    created_at?: string;
     tourist_unread?: number;
     provider_unread?: number;
 }

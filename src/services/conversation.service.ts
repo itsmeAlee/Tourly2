@@ -1,7 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
-import { handleAppwriteError } from "@/lib/errors";
+import { handleAppwriteError, AppError } from "@/lib/errors";
 import type {
     ConversationDocument,
     ConversationWithParticipants,
@@ -146,6 +146,19 @@ export async function getOrCreateConversation(
     providerId: string
 ): Promise<ConversationDocument> {
     try {
+        const listing = await databases.getDocument<ListingDocument>(
+            DATABASE_ID,
+            COLLECTIONS.LISTINGS,
+            listingId
+        );
+
+        if (listing.provider_id !== providerId) {
+            throw new AppError(
+                "VALIDATION",
+                "Listing does not belong to the selected provider."
+            );
+        }
+
         // Check for existing conversation
         const existing = await databases.listDocuments<ConversationDocument>(
             DATABASE_ID,
@@ -153,6 +166,7 @@ export async function getOrCreateConversation(
             [
                 Query.equal("listing_id", listingId),
                 Query.equal("tourist_id", touristId),
+                Query.equal("provider_id", providerId),
                 Query.limit(1),
             ]
         );
@@ -173,10 +187,12 @@ export async function getOrCreateConversation(
                 provider_id: providerId,
                 tourist_unread: 0,
                 provider_unread: 0,
+                created_at: now,
                 last_message_at: now,
             }
         );
     } catch (err) {
+        if (err instanceof AppError) throw err;
         throw handleAppwriteError(err);
     }
 }

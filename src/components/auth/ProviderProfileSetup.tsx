@@ -85,7 +85,7 @@ export function ProviderProfileSetup() {
                 [Query.equal("user_id", user.id), Query.limit(1)]
             );
             if (existing.documents.length > 0) {
-                router.push("/dashboard");
+                router.push("/provider/dashboard");
                 return;
             }
         } catch {

@@ -1,53 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Search, Edit, Trash2, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { getListingsByProvider } from "@/services/listing.service";
+import type { ListingDocument } from "@/types/listing.types";
+import { getListingImageUrl } from "@/lib/storage";
 
-// Mock data (TODO: Wire to Appwrite database backend)
-const MOCK_LISTINGS = [
-    {
-        id: "l1",
-        title: "Serena Hotel Suite",
-        type: "Stay",
-        location: "Gilgit",
-        status: "active",
-        price: 15000,
-        imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-    },
-    {
-        id: "l2",
-        title: "Hunza Valley Tour",
-        type: "Tour",
-        location: "Hunza",
-        status: "active",
-        price: 25000,
-        imageUrl: "https://images.unsplash.com/photo-1588693892837-a1691ab1a179?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-    },
-    {
-        id: "l3",
-        title: "Prado TZ Rental",
-        type: "Transport",
-        location: "Skardu",
-        status: "draft",
-        price: 5000,
-        imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-    }
-];
+function toTypeLabel(type: ListingDocument["type"]) {
+    if (type === "stay") return "Stay";
+    if (type === "transport") return "Transport";
+    return "Guide";
+}
 
 export function ProviderListingsClient() {
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState("");
-    const [listings, setListings] = useState(MOCK_LISTINGS);
-    // Replace MOCK_LISTINGS with `[]` to test empty state
+    const [listings, setListings] = useState<ListingDocument[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const filteredListings = listings.filter((listing) =>
-        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            if (!user?.providerId) {
+                if (!cancelled) {
+                    setListings([]);
+                    setIsLoading(false);
+                }
+                return;
+            }
+
+            try {
+                const docs = await getListingsByProvider(user.providerId);
+                if (!cancelled) {
+                    setListings(docs);
+                }
+            } catch (err) {
+                console.error("[ProviderListings] Failed to load:", err);
+                if (!cancelled) {
+                    setListings([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        }
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user?.providerId]);
+
+    const filteredListings = useMemo(() => {
+        const q = searchTerm.toLowerCase().trim();
+        if (!q) return listings;
+
+        return listings.filter((listing) =>
+            listing.title.toLowerCase().includes(q) ||
+            listing.location.toLowerCase().includes(q) ||
+            listing.region.toLowerCase().includes(q)
+        );
+    }, [listings, searchTerm]);
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -78,8 +100,12 @@ export function ProviderListingsClient() {
                 </div>
             </div>
 
+            {isLoading && (
+                <div className="text-center py-10 text-muted-foreground">Loading listings...</div>
+            )}
+
             {/* Empty State */}
-            {listings.length === 0 ? (
+            {!isLoading && listings.length === 0 ? (
                 <div className="bg-white border text-center border-dashed rounded-3xl p-12 flex flex-col items-center justify-center min-h-[400px]">
                     <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                         <PlusCircle className="h-8 w-8 text-primary" />
@@ -95,7 +121,7 @@ export function ProviderListingsClient() {
                         </Button>
                     </Link>
                 </div>
-            ) : filteredListings.length === 0 ? (
+            ) : !isLoading && filteredListings.length === 0 ? (
                 <div className="text-center py-12">
                     <p className="text-muted-foreground">No listings match your search.</p>
                 </div>
@@ -103,11 +129,11 @@ export function ProviderListingsClient() {
                 /* Listings Grid */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredListings.map((listing) => (
-                        <Card key={listing.id} className="overflow-hidden rounded-2xl shadow-sm border-gray-100 group transition-all hover:shadow-md">
+                        <Card key={listing.$id} className="overflow-hidden rounded-2xl shadow-sm border-gray-100 group transition-all hover:shadow-md">
                             <div className="relative h-48 w-full overflow-hidden bg-gray-100">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                    src={listing.imageUrl}
+                                    src={listing.images?.[0] ? getListingImageUrl(listing.images[0], 640) : "/images/placeholder-listing.jpg"}
                                     alt={listing.title}
                                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                                 />
@@ -115,20 +141,20 @@ export function ProviderListingsClient() {
                                     className="absolute top-3 left-3 rounded-full backdrop-blur-md bg-white/80 text-foreground font-medium border-0"
                                     variant="secondary"
                                 >
-                                    {listing.type}
+                                    {toTypeLabel(listing.type)}
                                 </Badge>
                                 <Badge
                                     className={`absolute top-3 right-3 rounded-full capitalize font-medium
-                                        ${listing.status === "active" ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-500 hover:bg-gray-600 text-white"}
+                                        ${listing.is_active ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-500 hover:bg-gray-600 text-white"}
                                     `}
                                 >
-                                    {listing.status}
+                                    {listing.is_active ? "active" : "draft"}
                                 </Badge>
                             </div>
                             <CardContent className="p-5">
                                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
                                     <MapPin className="w-3.5 h-3.5" />
-                                    {listing.location}
+                                    {listing.location || listing.region}
                                 </div>
                                 <h3 className="font-semibold text-lg text-foreground mb-2 line-clamp-1">
                                     {listing.title}
@@ -136,13 +162,13 @@ export function ProviderListingsClient() {
                                 <div className="text-primary font-bold mb-4">
                                     Rs {listing.price.toLocaleString()}
                                     <span className="text-xs text-muted-foreground font-normal ml-1">
-                                        {listing.type === "Stay" ? "/ night" : listing.type === "Tour" ? "/ person" : "/ day"}
+                                        / {listing.price_unit}
                                     </span>
                                 </div>
 
                                 {/* Actions */}
                                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
-                                    <Link href={`/provider/listings/${listing.id}/edit`}>
+                                    <Link href={`/provider/listings/${listing.$id}/edit`}>
                                         <Button variant="outline" className="w-full rounded-xl flex items-center justify-center gap-2 text-sm">
                                             <Edit className="w-3.5 h-3.5" />
                                             Edit

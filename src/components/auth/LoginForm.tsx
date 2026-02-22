@@ -22,10 +22,8 @@ export function LoginForm() {
     const redirectTo = searchParams.get("next") || "/";
 
     const validateEmail = (email: string): boolean => {
-        // Basic email or phone validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[\d\s\-+()]{10,}$/;
-        return emailRegex.test(email) || phoneRegex.test(email.replace(/\s/g, ""));
+        return emailRegex.test(email);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -34,11 +32,11 @@ export function LoginForm() {
 
         // Validation
         if (!email.trim()) {
-            setError("Email or phone number is required");
+            setError("Email is required");
             return;
         }
         if (!validateEmail(email)) {
-            setError("Please enter a valid email or phone number");
+            setError("Please enter a valid email address");
             return;
         }
         if (!password) {
@@ -89,14 +87,14 @@ export function LoginForm() {
                     {/* Email/Phone Field */}
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                            Email or phone number
+                            Email
                         </label>
                         <input
                             id="email"
                             type="text"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email or phone"
+                            placeholder="Enter your email"
                             className={cn(
                                 "w-full px-4 py-3 rounded-xl border bg-white",
                                 "text-foreground placeholder:text-muted-foreground",

@@ -85,9 +85,11 @@ export function InboxPageClient() {
             let data: ConversationWithParticipants[] = [];
 
             if (user.role === "provider") {
-                if (user.providerId) {
-                    data = await getConversationsForProvider(user.providerId);
+                if (!user.providerId) {
+                    setConversations([]);
+                    return;
                 }
+                data = await getConversationsForProvider(user.providerId);
             } else {
                 data = await getConversationsForTourist(user.id);
             }
@@ -130,7 +132,7 @@ export function InboxPageClient() {
 
                 // Only react if the conversation specifically targets our current role's identity
                 if (user.role === "provider") {
-                    if (payload.provider_id !== user.providerId) return;
+                    if (!user.providerId || payload.provider_id !== user.providerId) return;
                 } else {
                     if (payload.tourist_id !== user.id) return;
                 }
