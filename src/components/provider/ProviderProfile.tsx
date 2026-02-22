@@ -30,7 +30,6 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
 
     const handleMessage = () => {
         // TODO: Open message modal
-        console.log('Message provider:', provider.id);
     };
 
     // Group listings by type
