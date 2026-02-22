@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode, RefObject, useRef } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, RefObject, useRef, useMemo } from "react";
 
 // Define the tab types - must match SearchWidget
 // Note: "AI Trip Planner" moved to Navbar as standalone "TripAI" link
@@ -62,17 +62,20 @@ export function SearchProvider({ children }: SearchProviderProps) {
         }
     }, []);
 
+    const value = useMemo(
+        () => ({
+            activeTab,
+            setActiveTab,
+            isSearchHidden,
+            setIsSearchHidden,
+            searchWidgetRef,
+            scrollToSearch,
+        }),
+        [activeTab, isSearchHidden, scrollToSearch]
+    );
+
     return (
-        <SearchContext.Provider
-            value={{
-                activeTab,
-                setActiveTab,
-                isSearchHidden,
-                setIsSearchHidden,
-                searchWidgetRef,
-                scrollToSearch,
-            }}
-        >
+        <SearchContext.Provider value={value}>
             {children}
         </SearchContext.Provider>
     );
