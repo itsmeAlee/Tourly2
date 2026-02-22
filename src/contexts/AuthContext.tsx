@@ -11,8 +11,14 @@ import React, {
     useCallback,
 } from "react";
 import { Query, type Models } from "appwrite";
-import { account, databases } from "@/lib/appwrite";
+import {
+    account,
+    databases,
+    isAppwriteClientConfigured,
+    getAppwriteClientConfigError,
+} from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
+import { mapAuthError } from "@/lib/auth-errors";
 
 /** Shape of a document in the `users` collection. */
 interface UserDocument extends Models.Document {
@@ -143,6 +149,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // ── Check Session (runs once on mount) ───────────────
 
     const checkSession = useCallback(async () => {
+        if (!isAppwriteClientConfigured) {
+            setUser(null);
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const appwriteAccount = await account.get();
             const userDoc = await fetchUserDocument(appwriteAccount.$id);
@@ -189,6 +201,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ): Promise<{ success: boolean; error?: string; role?: "tourist" | "provider" }> => {
             setIsLoading(true);
 
+            if (!isAppwriteClientConfigured) {
+                setIsLoading(false);
+                return { success: false, error: getAppwriteClientConfigError() };
+            }
+
             try {
                 // 1. Create session
                 await account.createEmailPasswordSession(email, password);
@@ -220,13 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 return { success: true, role: user.role };
             } catch (err: unknown) {
-                // Appwrite throws typed errors with message + code
-                const message =
-                    err instanceof Error
-                        ? err.message
-                        : "Invalid credentials. Please try again.";
-
-                return { success: false, error: message };
+                return { success: false, error: mapAuthError(err) };
             } finally {
                 setIsLoading(false);
             }
@@ -243,6 +254,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             password: string
         ): Promise<{ success: boolean; error?: string }> => {
             setIsLoading(true);
+
+            if (!isAppwriteClientConfigured) {
+                setIsLoading(false);
+                return { success: false, error: getAppwriteClientConfigError() };
+            }
 
             try {
                 // Input validation (also validated by forms, but belt-and-suspenders)
@@ -296,12 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 return { success: true };
             } catch (err: unknown) {
-                const message =
-                    err instanceof Error
-                        ? err.message
-                        : "Could not create account. Please try again.";
-
-                return { success: false, error: message };
+                return { success: false, error: mapAuthError(err) };
             } finally {
                 setIsLoading(false);
             }
@@ -324,6 +335,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // ── Refresh User ─────────────────────────────────────
 
     const refreshUser = useCallback(async () => {
+        if (!isAppwriteClientConfigured) {
+            setUser(null);
+            return;
+        }
+
         try {
             const appwriteAccount = await account.get();
             const userDoc = await fetchUserDocument(appwriteAccount.$id);

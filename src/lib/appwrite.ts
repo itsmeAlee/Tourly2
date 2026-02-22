@@ -9,13 +9,30 @@ import { Client, Account, Databases, Storage } from "appwrite";
  * @see https://appwrite.io/docs/sdks#client
  */
 
-const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+const RAW_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
 const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
 
-if (!ENDPOINT || !PROJECT_ID) {
+function normalizeEndpoint(endpoint?: string): string | undefined {
+    if (!endpoint) return undefined;
+
+    const trimmed = endpoint.trim().replace(/\/+$/, "");
+    if (!trimmed) return undefined;
+
+    return /\/v\d+$/i.test(trimmed) ? trimmed : `${trimmed}/v1`;
+}
+
+const ENDPOINT = normalizeEndpoint(RAW_ENDPOINT);
+
+export const isAppwriteClientConfigured = Boolean(ENDPOINT && PROJECT_ID);
+
+export function getAppwriteClientConfigError(): string {
+    return "Authentication service is not configured. Set NEXT_PUBLIC_APPWRITE_ENDPOINT and NEXT_PUBLIC_APPWRITE_PROJECT_ID in Vercel, and ensure your Vercel domain is added in Appwrite Platform settings.";
+}
+
+if (!isAppwriteClientConfigured) {
     console.warn(
-        "[Appwrite] Missing env vars NEXT_PUBLIC_APPWRITE_ENDPOINT or NEXT_PUBLIC_APPWRITE_PROJECT_ID. " +
-        "Appwrite calls will fail until these are set in .env.local."
+        "[Appwrite] Client SDK not fully configured. " +
+        "Auth calls can fail until NEXT_PUBLIC_APPWRITE_ENDPOINT and NEXT_PUBLIC_APPWRITE_PROJECT_ID are set, and the current origin is allowed in Appwrite Platforms."
     );
 }
 

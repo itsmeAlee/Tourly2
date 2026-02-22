@@ -63,9 +63,16 @@ export function MobileSearchView() {
   const [transportItems, setTransportItems] = useState<TopRatedItem[]>(mockTourOperators);
   const [guideItems, setGuideItems] = useState<TopRatedItem[]>(mockGuides);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   // Fetch real data on mount — fall back to mocks on error
   useEffect(() => {
+    if (!hasHydrated) return;
+
     async function fetchTopRated() {
       try {
         const [stays, transports, guides] = await Promise.all([
@@ -84,7 +91,7 @@ export function MobileSearchView() {
       }
     }
     fetchTopRated();
-  }, []);
+  }, [hasHydrated]);
 
   // Intersection Observer for sticky detection - triggers when search form leaves viewport
   useEffect(() => {

@@ -13,13 +13,19 @@ import {
     ArrowLeft,
 } from "lucide-react";
 import { ID, AppwriteException } from "appwrite";
-import { account, databases } from "@/lib/appwrite";
+import {
+    account,
+    databases,
+    isAppwriteClientConfigured,
+    getAppwriteClientConfigError,
+} from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { OtpInput } from "@/components/ui/OtpInput";
+import { mapAuthError } from "@/lib/auth-errors";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -130,6 +136,11 @@ export function SignupForm() {
         e.preventDefault();
         setServerError("");
 
+        if (!isAppwriteClientConfigured) {
+            setServerError(getAppwriteClientConfigError());
+            return;
+        }
+
         // Validate
         const validationErrors = validateForm({
             name,
@@ -179,13 +190,11 @@ export function SignupForm() {
                         break;
                     default:
                         setServerError(
-                            err.message || "Something went wrong. Please try again."
+                            mapAuthError(err)
                         );
                 }
             } else {
-                setServerError(
-                    "Something went wrong. Please check your connection."
-                );
+                setServerError(mapAuthError(err));
             }
         } finally {
             setIsSubmitting(false);
@@ -221,6 +230,11 @@ export function SignupForm() {
     const handleResend = async () => {
         if (!unverifiedUserId) return;
 
+        if (!isAppwriteClientConfigured) {
+            setOtpError(getAppwriteClientConfigError());
+            return;
+        }
+
         if (resendAttempts >= 3) {
             setOtpError("Too many attempts. Please wait 10 minutes before trying again.");
             return;
@@ -236,7 +250,7 @@ export function SignupForm() {
             startTimer();
             toast.success("New code sent to your email", { position: "bottom-center" });
         } catch (err: unknown) {
-            setOtpError(err instanceof Error ? err.message : "Failed to resend code. Please try again.");
+            setOtpError(mapAuthError(err));
         } finally {
             setIsResending(false);
         }
@@ -246,6 +260,11 @@ export function SignupForm() {
 
     const handleVerify = async () => {
         if (!unverifiedUserId || otpCode.length < 6 || isVerifying || isVerified) return;
+
+        if (!isAppwriteClientConfigured) {
+            setOtpError(getAppwriteClientConfigError());
+            return;
+        }
 
         setIsVerifying(true);
         setOtpError("");
@@ -288,24 +307,29 @@ export function SignupForm() {
 
         } catch (err: unknown) {
             // Failed verification
-            setFailedAttempts((prev) => {
-                const newAttempts = prev + 1;
-                if (newAttempts >= 5) {
-                    setOtpError("Too many incorrect attempts. Please request a new code.");
-                    setOtpTimer(0); // Allow resend immediately
-                    if (timerRef.current) clearInterval(timerRef.current);
-                } else {
-                    setOtpError("Incorrect code. Please try again.");
-                }
-                return newAttempts;
-            });
+            const mappedError = mapAuthError(err);
+            const isLikelyInvalidOtp =
+                err instanceof AppwriteException &&
+                (err.code === 401 || err.code === 400);
 
             if (err instanceof Error && err.message.includes("expired")) {
                 setOtpError("Your code has expired. Please request a new one.");
                 setOtpTimer(0);
                 if (timerRef.current) clearInterval(timerRef.current);
-            } else if (err instanceof Error && !err.message.includes("Invalid")) {
-                setOtpError("Connection error. Please check your internet and try again.");
+            } else if (isLikelyInvalidOtp) {
+                setFailedAttempts((prev) => {
+                    const newAttempts = prev + 1;
+                    if (newAttempts >= 5) {
+                        setOtpError("Too many incorrect attempts. Please request a new code.");
+                        setOtpTimer(0);
+                        if (timerRef.current) clearInterval(timerRef.current);
+                    } else {
+                        setOtpError("Incorrect code. Please try again.");
+                    }
+                    return newAttempts;
+                });
+            } else {
+                setOtpError(mappedError);
             }
         } finally {
             setIsVerifying(false);
