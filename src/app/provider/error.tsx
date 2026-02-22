@@ -13,8 +13,12 @@ export default function ProviderError({
     reset: () => void;
 }) {
     useEffect(() => {
-        // Log the error to an error reporting service
-        console.error(error);
+        if (process.env.NODE_ENV !== "production") {
+            console.error("[ProviderError]", {
+                message: error?.message,
+                digest: error?.digest,
+            });
+        }
     }, [error]);
 
     return (
@@ -27,7 +31,7 @@ export default function ProviderError({
                     <div>
                         <h2 className="text-xl font-semibold text-foreground">Something went wrong!</h2>
                         <p className="text-sm text-muted-foreground mt-2">
-                            {error.message || "An unexpected error occurred while loading this page."}
+                            An unexpected error occurred while loading this page.
                         </p>
                     </div>
                     <Button

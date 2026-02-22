@@ -7,6 +7,8 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isAppwriteClientConfigured } from "@/lib/appwrite";
+import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
 
 export function LoginForm() {
     const router = useRouter();
@@ -58,6 +60,10 @@ export function LoginForm() {
             setError(result.error || "Login failed. Please try again.");
         }
     };
+
+    if (!isAppwriteClientConfigured) {
+        return <AuthServiceUnavailable />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

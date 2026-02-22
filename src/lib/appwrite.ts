@@ -26,7 +26,7 @@ const ENDPOINT = normalizeEndpoint(RAW_ENDPOINT);
 export const isAppwriteClientConfigured = Boolean(ENDPOINT && PROJECT_ID);
 
 export function getAppwriteClientConfigError(): string {
-    return "Authentication service is not configured. Set NEXT_PUBLIC_APPWRITE_ENDPOINT and NEXT_PUBLIC_APPWRITE_PROJECT_ID in Vercel, and ensure your Vercel domain is added in Appwrite Platform settings.";
+    return "Service temporarily unavailable. Please try again later.";
 }
 
 if (!isAppwriteClientConfigured) {

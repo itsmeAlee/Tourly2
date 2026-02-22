@@ -6,19 +6,19 @@ export function mapAuthError(error: unknown): string {
             case 401:
                 return "Invalid email or password.";
             case 403:
-                return "Access denied. Please try again.";
+                return "We’re having trouble connecting. Please try again later.";
             case 409:
                 return "An account with this email already exists.";
             case 429:
                 return "Too many attempts. Please wait and try again.";
             default:
-                return "Authentication failed. Please try again.";
+                return "We’re having trouble connecting. Please try again later.";
         }
     }
 
     if (error instanceof TypeError && /failed to fetch/i.test(error.message)) {
-        return "Connection to authentication service failed. Verify Vercel NEXT_PUBLIC_APPWRITE_* variables and Appwrite Platform domain/CORS settings.";
+        return "We’re having trouble connecting. Please try again later.";
     }
 
-    return "Something went wrong. Please try again.";
+    return "We’re having trouble connecting. Please try again later.";
 }

@@ -11,10 +11,12 @@ export default function GlobalError({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error("[GlobalError]", {
-            message: error?.message,
-            digest: error?.digest,
-        });
+        if (process.env.NODE_ENV !== "production") {
+            console.error("[GlobalError]", {
+                message: error?.message,
+                digest: error?.digest,
+            });
+        }
     }, [error]);
 
     return (

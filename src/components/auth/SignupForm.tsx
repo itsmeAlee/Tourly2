@@ -26,6 +26,7 @@ import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { mapAuthError } from "@/lib/auth-errors";
+import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -131,6 +132,10 @@ export function SignupForm() {
         }
         if (serverError) setServerError("");
     };
+
+    if (!isAppwriteClientConfigured) {
+        return <AuthServiceUnavailable />;
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
