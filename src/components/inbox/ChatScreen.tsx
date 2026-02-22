@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, User, Loader2, AlertCircle, ExternalLink } from "lucide-react";
@@ -449,7 +449,7 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
 
 // ─── Message Bubble ──────────────────────────────────────
 
-function MessageBubble({
+const MessageBubble = memo(function MessageBubble({
     message,
     isCurrentUser,
 }: {
@@ -488,7 +488,7 @@ function MessageBubble({
             </div>
         </div>
     );
-}
+});
 
 // ─── Date Grouping Helper ────────────────────────────────
 
