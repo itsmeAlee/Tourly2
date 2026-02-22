@@ -177,6 +177,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
+        // Security fix: Ensure any legacy insecurely stored user data is removed.
+        // Previous versions might have stored the user object in localStorage.
+        if (typeof window !== "undefined") {
+            try {
+                localStorage.removeItem("tourly_user");
+            } catch {
+                // Ignore errors if localStorage is inaccessible
+            }
+        }
         checkSession();
     }, [checkSession]);
 
