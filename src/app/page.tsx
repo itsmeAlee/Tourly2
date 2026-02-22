@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { TopRatedSection } from "@/components/TopRatedSection";
-import { getTopListings } from "@/services/listing.service";
+import { getTopListingsServer } from "@/services/server/listing.server.service";
 import { mapListingToTopRatedItem } from "@/lib/mappers";
 
 // TODO: Remove mock data fallback once Appwrite listings are populated
@@ -46,15 +46,15 @@ export const metadata: Metadata = {
 export default async function HomePage() {
     // Fetch all three categories in PARALLEL — never sequential
     let [stays, transport, guides] = await Promise.all([
-        getTopListings("stay", 6).catch((err) => {
+        getTopListingsServer("stay", 6).catch((err) => {
             console.error("[HomePage] Failed to fetch stays:", err);
             return null; // Signal to use mock fallback
         }),
-        getTopListings("transport", 6).catch((err) => {
+        getTopListingsServer("transport", 6).catch((err) => {
             console.error("[HomePage] Failed to fetch transport:", err);
             return null;
         }),
-        getTopListings("guide", 6).catch((err) => {
+        getTopListingsServer("guide", 6).catch((err) => {
             console.error("[HomePage] Failed to fetch guides:", err);
             return null;
         }),
