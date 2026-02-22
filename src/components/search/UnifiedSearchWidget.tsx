@@ -18,7 +18,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Bed, Car, Users, MapPin, User, Minus, Plus } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, SEARCH_INPUT_CLASSES, SEARCH_SELECT_CLASSES, SEARCH_LABEL_CLASSES } from "@/lib/utils";
 import { useSmartDateRange } from "@/hooks/use-smart-date-range";
 import { useSearch, tabs, TabType } from "@/contexts/SearchContext";
 
@@ -58,15 +58,6 @@ const tabIcons: Record<TabType, React.ReactNode> = {
     Transport: <Car className="w-4 h-4" />,
     Guides: <Users className="w-4 h-4" />,
 };
-
-// The EXACT classes to completely remove input styling - lighter text for placeholder look
-const inputClasses = "appearance-none border-none outline-none shadow-none ring-0 focus:ring-0 focus:outline-none focus:border-none bg-transparent p-0 w-full text-base font-semibold text-foreground/60 placeholder:text-foreground/50 leading-tight";
-
-// The EXACT classes for select triggers - must override ALL default styles
-const selectClasses = "!appearance-none !border-none !outline-none !shadow-none !ring-0 !ring-offset-0 focus:!ring-0 focus:!outline-none focus:!border-none focus-visible:!ring-0 focus-visible:!outline-none !bg-transparent !p-0 !h-auto w-full text-base font-semibold text-foreground/60 leading-tight [&>svg]:hidden [&>span]:truncate [&>span]:text-foreground/60";
-
-// Label classes - larger, positioned near top
-const labelClasses = "text-sm font-semibold text-muted-foreground leading-none";
 
 // Boxed container - RIGID dimensions for zero CLS
 // Fixed height ensures no layout shift when switching tabs
@@ -220,13 +211,13 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <label className={labelClasses}>Where to?</label>
+                    <label className={SEARCH_LABEL_CLASSES}>Where to?</label>
                     <input
                         type="text"
                         placeholder="Istanbul, Türkiye (IST)"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className={inputClasses}
+                        className={SEARCH_INPUT_CLASSES}
                     />
                 </div>
             </div>
@@ -237,7 +228,7 @@ export function UnifiedSearchWidget({
                     <button className={cn(boxClasses, "text-left cursor-pointer")}>
                         <CalendarIcon className="w-5 h-5 text-muted-foreground shrink-0" />
                         <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                            <span className={labelClasses}>Dates</span>
+                            <span className={SEARCH_LABEL_CLASSES}>Dates</span>
                             <span className="text-base font-semibold text-foreground/60 leading-tight truncate">
                                 {startDate && endDate
                                     ? `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`
@@ -286,7 +277,7 @@ export function UnifiedSearchWidget({
                     <button className={cn(boxClasses, "text-left cursor-pointer")}>
                         <User className="w-5 h-5 text-muted-foreground shrink-0" />
                         <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                            <span className={labelClasses}>Travelers</span>
+                            <span className={SEARCH_LABEL_CLASSES}>Travelers</span>
                             <span className="text-base font-semibold text-foreground/60 leading-tight truncate">
                                 {travelers} traveler{travelers > 1 ? "s" : ""}, {rooms} room{rooms > 1 ? "s" : ""}
                             </span>
@@ -351,13 +342,13 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <label className={labelClasses}>Pickup</label>
+                    <label className={SEARCH_LABEL_CLASSES}>Pickup</label>
                     <input
                         type="text"
                         placeholder="Enter pickup location"
                         value={pickupPoint}
                         onChange={(e) => setPickupPoint(e.target.value)}
-                        className={inputClasses}
+                        className={SEARCH_INPUT_CLASSES}
                     />
                 </div>
             </div>
@@ -366,9 +357,9 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <Car className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <span className={labelClasses}>Vehicle Type</span>
+                    <span className={SEARCH_LABEL_CLASSES}>Vehicle Type</span>
                     <Select>
-                        <SelectTrigger className={selectClasses}>
+                        <SelectTrigger className={SEARCH_SELECT_CLASSES}>
                             <SelectValue placeholder="Select vehicle" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border shadow-lg z-50 rounded-xl">
@@ -386,9 +377,9 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <CalendarIcon className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <span className={labelClasses}>Duration</span>
+                    <span className={SEARCH_LABEL_CLASSES}>Duration</span>
                     <Select>
-                        <SelectTrigger className={selectClasses}>
+                        <SelectTrigger className={SEARCH_SELECT_CLASSES}>
                             <SelectValue placeholder="Select duration" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border shadow-lg z-50 rounded-xl">
@@ -411,13 +402,13 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <label className={labelClasses}>Where to?</label>
+                    <label className={SEARCH_LABEL_CLASSES}>Where to?</label>
                     <input
                         type="text"
                         placeholder="Enter destination"
                         value={region}
                         onChange={(e) => setRegion(e.target.value)}
-                        className={inputClasses}
+                        className={SEARCH_INPUT_CLASSES}
                     />
                 </div>
             </div>
@@ -426,9 +417,9 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <Users className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <span className={labelClasses}>Activity</span>
+                    <span className={SEARCH_LABEL_CLASSES}>Activity</span>
                     <Select>
-                        <SelectTrigger className={selectClasses}>
+                        <SelectTrigger className={SEARCH_SELECT_CLASSES}>
                             <SelectValue placeholder="Select activity" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border shadow-lg z-50 rounded-xl">
@@ -447,9 +438,9 @@ export function UnifiedSearchWidget({
             <div className={boxClasses}>
                 <User className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0 h-full justify-center gap-0.5">
-                    <span className={labelClasses}>Language</span>
+                    <span className={SEARCH_LABEL_CLASSES}>Language</span>
                     <Select>
-                        <SelectTrigger className={selectClasses}>
+                        <SelectTrigger className={SEARCH_SELECT_CLASSES}>
                             <SelectValue placeholder="Any language" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border shadow-lg z-50 rounded-xl">

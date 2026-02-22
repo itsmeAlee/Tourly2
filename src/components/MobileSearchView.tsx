@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Bed, Car, Users, MapPin, Calendar, User, Compass, Minus, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, SEARCH_INPUT_CLASSES, SEARCH_SELECT_CLASSES, SEARCH_LABEL_CLASSES } from "@/lib/utils";
 import { useSmartDateRange } from "@/hooks/use-smart-date-range";
 import { TopRatedSection } from "./TopRatedSection";
 import { ServiceTabs } from "@/components/ServiceTabs";
@@ -36,15 +36,6 @@ const services = [
 ] as const;
 
 type ServiceId = (typeof services)[number]["id"];
-
-// The EXACT classes to completely remove input styling - lighter text for placeholder look
-const inputClasses = "appearance-none border-none outline-none shadow-none ring-0 focus:ring-0 focus:outline-none focus:border-none bg-transparent p-0 w-full text-base font-semibold text-foreground/60 placeholder:text-foreground/50 leading-tight";
-
-// The EXACT classes for select triggers - must override ALL default styles
-const selectClasses = "!appearance-none !border-none !outline-none !shadow-none !ring-0 !ring-offset-0 focus:!ring-0 focus:!outline-none focus:!border-none focus-visible:!ring-0 focus-visible:!outline-none !bg-transparent !p-0 !h-auto w-full text-base font-semibold text-foreground/60 leading-tight [&>svg]:hidden [&>span]:truncate [&>span]:text-foreground/60";
-
-// Label classes - larger, positioned near top
-const labelClasses = "text-sm font-semibold text-muted-foreground leading-none";
 
 // Boxed container - top-heavy padding to push label near top border
 const boxClasses = "flex items-start gap-3 px-4 pt-2 pb-3 border border-border rounded-md bg-background w-full";
@@ -138,13 +129,13 @@ export function MobileSearchView() {
       <div className={boxClasses}>
         <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
         <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-          <label className={labelClasses}>Where to?</label>
+          <label className={SEARCH_LABEL_CLASSES}>Where to?</label>
           <input
             type="text"
             placeholder="Istanbul, Türkiye (IST)"
             value={staysLocation}
             onChange={(e) => setStaysLocation(e.target.value)}
-            className={inputClasses}
+            className={SEARCH_INPUT_CLASSES}
           />
         </div>
       </div>
@@ -155,7 +146,7 @@ export function MobileSearchView() {
           <button className={cn(boxClasses, "text-left cursor-pointer")}>
             <Calendar className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-              <span className={labelClasses}>Dates</span>
+              <span className={SEARCH_LABEL_CLASSES}>Dates</span>
               <span className="text-base font-semibold text-foreground/60 leading-tight truncate">
                 {staysStartDate && staysEndDate
                   ? `${format(staysStartDate, "MMM d")} - ${format(staysEndDate, "MMM d")}`
@@ -196,7 +187,7 @@ export function MobileSearchView() {
           <button className={cn(boxClasses, "text-left cursor-pointer")}>
             <User className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-              <span className={labelClasses}>Travelers</span>
+              <span className={SEARCH_LABEL_CLASSES}>Travelers</span>
               <span className="text-base font-semibold text-foreground/60 leading-tight truncate">
                 {travelers} traveler{travelers > 1 ? "s" : ""}, {rooms} room{rooms > 1 ? "s" : ""}
               </span>
@@ -261,13 +252,13 @@ export function MobileSearchView() {
       <div className={boxClasses}>
         <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
         <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-          <label className={labelClasses}>Pickup</label>
+          <label className={SEARCH_LABEL_CLASSES}>Pickup</label>
           <input
             type="text"
             placeholder="Enter pickup location"
             value={pickupLocation}
             onChange={(e) => setPickupLocation(e.target.value)}
-            className={inputClasses}
+            className={SEARCH_INPUT_CLASSES}
           />
         </div>
       </div>
@@ -276,13 +267,13 @@ export function MobileSearchView() {
       <div className={boxClasses}>
         <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
         <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-          <label className={labelClasses}>Drop-off</label>
+          <label className={SEARCH_LABEL_CLASSES}>Drop-off</label>
           <input
             type="text"
             placeholder="Enter drop-off location"
             value={dropoffLocation}
             onChange={(e) => setDropoffLocation(e.target.value)}
-            className={inputClasses}
+            className={SEARCH_INPUT_CLASSES}
           />
         </div>
       </div>
@@ -291,9 +282,9 @@ export function MobileSearchView() {
       <div className={boxClasses}>
         <Car className="w-5 h-5 text-muted-foreground shrink-0" />
         <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-          <span className={labelClasses}>Vehicle Type</span>
+          <span className={SEARCH_LABEL_CLASSES}>Vehicle Type</span>
           <Select>
-            <SelectTrigger className={selectClasses}>
+            <SelectTrigger className={SEARCH_SELECT_CLASSES}>
               <SelectValue placeholder="Select vehicle" />
             </SelectTrigger>
             <SelectContent className="bg-background border shadow-lg z-50">
@@ -315,13 +306,13 @@ export function MobileSearchView() {
       <div className={boxClasses}>
         <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
         <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-          <label className={labelClasses}>Where to?</label>
+          <label className={SEARCH_LABEL_CLASSES}>Where to?</label>
           <input
             type="text"
             placeholder="Enter destination"
             value={guideDestination}
             onChange={(e) => setGuideDestination(e.target.value)}
-            className={inputClasses}
+            className={SEARCH_INPUT_CLASSES}
           />
         </div>
       </div>
@@ -332,7 +323,7 @@ export function MobileSearchView() {
           <button className={cn(boxClasses, "text-left cursor-pointer")}>
             <Calendar className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-              <span className={labelClasses}>Date</span>
+              <span className={SEARCH_LABEL_CLASSES}>Date</span>
               <span className="text-base font-semibold text-foreground leading-tight truncate">
                 {guideDate ? format(guideDate, "EEE, MMM d") : "Select date"}
               </span>
@@ -354,9 +345,9 @@ export function MobileSearchView() {
       <div className={boxClasses}>
         <Compass className="w-5 h-5 text-muted-foreground shrink-0" />
         <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-          <span className={labelClasses}>Activity Type</span>
+          <span className={SEARCH_LABEL_CLASSES}>Activity Type</span>
           <Select>
-            <SelectTrigger className={selectClasses}>
+            <SelectTrigger className={SEARCH_SELECT_CLASSES}>
               <SelectValue placeholder="Select activity" />
             </SelectTrigger>
             <SelectContent className="bg-background border shadow-lg z-50">
