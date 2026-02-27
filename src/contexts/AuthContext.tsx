@@ -289,7 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // 3. Create the users collection document
                 const now = new Date().toISOString();
-                await databases.createDocument(
+                const newUserDoc = await databases.createDocument<UserDocument>(
                     DATABASE_ID,
                     COLLECTIONS.USERS,
                     ID.unique(),
@@ -302,13 +302,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     }
                 );
 
-                // 4. Fetch everything fresh and populate state
-                const appwriteAccount = await account.get();
-                const userDoc = await fetchUserDocument(appwriteAccount.$id);
-
-                if (userDoc) {
-                    setUser(buildAuthUser(appwriteAccount, userDoc));
-                }
+                // 4. Populate state directly with the created data
+                setUser(buildAuthUser(newAccount, newUserDoc));
 
                 return { success: true };
             } catch (err: unknown) {
