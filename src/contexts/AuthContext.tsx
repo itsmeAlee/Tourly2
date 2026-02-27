@@ -10,7 +10,7 @@ import React, {
     useEffect,
     useCallback,
 } from "react";
-import { Query, type Models } from "appwrite";
+import { Query, AppwriteException, type Models } from "appwrite";
 import {
     account,
     databases,
@@ -105,7 +105,8 @@ async function fetchProviderDocId(
             [Query.equal("user_id", accountId), Query.limit(1)]
         );
         return response.documents[0]?.$id;
-    } catch {
+    } catch (err) {
+        console.error("[AuthContext] Failed to fetch provider document:", err);
         return undefined;
     }
 }
@@ -167,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 );
                 try {
                     await account.deleteSession("current");
-                } catch {
+                } catch (err) {
                     // ignore — session may already be gone
                 }
                 setUser(null);
@@ -180,7 +181,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     : undefined;
 
             setUser(buildAuthUser(appwriteAccount, userDoc, providerDocId));
-        } catch {
+        } catch (err) {
+            const isUnauthorized =
+                err instanceof AppwriteException && err.code === 401;
+            if (!isUnauthorized) {
+                console.error("[AuthContext] Session check failed:", err);
+            }
             // 401 or network error → no active session, that's fine
             setUser(null);
         } finally {
@@ -355,7 +361,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     : undefined;
 
             setUser(buildAuthUser(appwriteAccount, userDoc, providerDocId));
-        } catch {
+        } catch (err) {
+            const isUnauthorized =
+                err instanceof AppwriteException && err.code === 401;
+            if (!isUnauthorized) {
+                console.error("[AuthContext] Refresh user failed:", err);
+            }
             setUser(null);
         }
     }, []);
