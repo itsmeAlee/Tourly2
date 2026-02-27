@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { providerProfileSchema } from "@/lib/schemas";
 
 // ─── Constants ──────────────────────────────────────────
 
@@ -101,22 +102,6 @@ export function ProviderProfileSetup() {
 
     // ── Validation ──────────────────────────────────────
 
-    const validate = (): FormErrors => {
-        const errs: FormErrors = {};
-        if (!businessName.trim()) {
-            errs.businessName = "Business name is required";
-        } else if (businessName.trim().length < 3) {
-            errs.businessName = "Business name must be at least 3 characters";
-        }
-        if (!region) {
-            errs.region = "Please select a region";
-        }
-        if (bio.length > 500) {
-            errs.bio = "Bio must be 500 characters or fewer";
-        }
-        return errs;
-    };
-
     const clearError = (field: keyof FormErrors) => {
         if (errors[field]) {
             setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -140,9 +125,23 @@ export function ProviderProfileSetup() {
         e.preventDefault();
         setServerError("");
 
-        const validationErrors = validate();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+        const validationResult = providerProfileSchema.safeParse({
+            businessName,
+            region,
+            bio,
+            languages,
+            phone,
+        });
+
+        if (!validationResult.success) {
+            const newErrors: FormErrors = {};
+            const fieldErrors = validationResult.error.flatten().fieldErrors;
+
+            if (fieldErrors.businessName) newErrors.businessName = fieldErrors.businessName[0];
+            if (fieldErrors.region) newErrors.region = fieldErrors.region[0];
+            if (fieldErrors.bio) newErrors.bio = fieldErrors.bio[0];
+
+            setErrors(newErrors);
             return;
         }
 

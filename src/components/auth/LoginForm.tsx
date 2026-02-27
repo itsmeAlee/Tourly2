@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isAppwriteClientConfigured } from "@/lib/appwrite";
 import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
+import { loginSchema } from "@/lib/schemas";
 
 export function LoginForm() {
     const router = useRouter();
@@ -23,27 +24,22 @@ export function LoginForm() {
     // Get redirect URL from query params
     const redirectTo = searchParams.get("next") || "/";
 
-    const validateEmail = (email: string): boolean => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
         // Validation
-        if (!email.trim()) {
-            setError("Email is required");
-            return;
-        }
-        if (!validateEmail(email)) {
-            setError("Please enter a valid email address");
-            return;
-        }
-        if (!password) {
-            setError("Password is required");
-            return;
+        const validationResult = loginSchema.safeParse({ email, password });
+        if (!validationResult.success) {
+            const fieldErrors = validationResult.error.flatten().fieldErrors;
+            if (fieldErrors.email) {
+                setError(fieldErrors.email[0]);
+                return;
+            }
+            if (fieldErrors.password) {
+                setError(fieldErrors.password[0]);
+                return;
+            }
         }
 
         const result = await login(email, password);

@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { mapAuthError } from "@/lib/auth-errors";
 import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
+import { signupSchema } from "@/lib/schemas";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -38,56 +39,6 @@ interface FormErrors {
     password?: string;
     confirmPassword?: string;
     role?: string;
-}
-
-// ─── Validation ─────────────────────────────────────────
-
-function validateForm(fields: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    role: UserRole | null;
-}): FormErrors {
-    const errors: FormErrors = {};
-
-    // Name
-    if (!fields.name.trim()) {
-        errors.name = "Full name is required";
-    } else if (fields.name.trim().length < 2) {
-        errors.name = "Name must be at least 2 characters";
-    }
-
-    // Email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!fields.email.trim()) {
-        errors.email = "Email is required";
-    } else if (!emailRegex.test(fields.email)) {
-        errors.email = "Please enter a valid email address";
-    }
-
-    // Password
-    if (!fields.password) {
-        errors.password = "Password is required";
-    } else if (fields.password.length < 8) {
-        errors.password = "Password must be at least 8 characters";
-    } else if (!/\d/.test(fields.password)) {
-        errors.password = "Password must contain at least 1 number";
-    }
-
-    // Confirm Password
-    if (!fields.confirmPassword) {
-        errors.confirmPassword = "Please confirm your password";
-    } else if (fields.confirmPassword !== fields.password) {
-        errors.confirmPassword = "Passwords do not match";
-    }
-
-    // Role
-    if (!fields.role) {
-        errors.role = "Please select an account type";
-    }
-
-    return errors;
 }
 
 // ─── Component ──────────────────────────────────────────
@@ -147,15 +98,25 @@ export function SignupForm() {
         }
 
         // Validate
-        const validationErrors = validateForm({
+        const validationResult = signupSchema.safeParse({
             name,
             email,
             password,
             confirmPassword,
             role,
         });
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+
+        if (!validationResult.success) {
+            const newErrors: FormErrors = {};
+            const fieldErrors = validationResult.error.flatten().fieldErrors;
+
+            if (fieldErrors.name) newErrors.name = fieldErrors.name[0];
+            if (fieldErrors.email) newErrors.email = fieldErrors.email[0];
+            if (fieldErrors.password) newErrors.password = fieldErrors.password[0];
+            if (fieldErrors.confirmPassword) newErrors.confirmPassword = fieldErrors.confirmPassword[0];
+            if (fieldErrors.role) newErrors.role = fieldErrors.role[0];
+
+            setErrors(newErrors);
             return;
         }
 
