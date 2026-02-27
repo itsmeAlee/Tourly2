@@ -14,6 +14,7 @@
 import type { ListingDocument, ListingWithDetails, ListingType } from "@/types/listing.types";
 import type { ProviderDocument } from "@/types/provider.types";
 import type { ConversationWithParticipants } from "@/types/conversation.types";
+import type { InboxItem } from "./inbox-mappers";
 import type { ListingCategory } from "@/components/ListingCard";
 import type {
     Listing,
@@ -49,17 +50,6 @@ export interface PublicProviderProfile {
     experienceYears: number;
     isVerified: boolean;
     joinedDate: string;
-}
-
-/** Inbox conversation item for the messaging UI. */
-export interface InboxItem {
-    id: string;
-    otherParticipantName: string;
-    otherParticipantAvatar: string;
-    lastMessage: string;
-    lastMessageAt: string;
-    unreadCount: number;
-    listingTitle?: string;
 }
 
 // ─── Listing Type → Category Mapping ────────────────────
@@ -282,27 +272,4 @@ export function mapProviderToPublicProfile(
 
 // ─── Conversation Mapper ────────────────────────────────
 
-/**
- * Maps a ConversationWithParticipants to an InboxItem.
- */
-export function mapConversationToInboxItem(
-    conversation: ConversationWithParticipants,
-    currentUserId: string
-): InboxItem {
-    const isCurrentUserTourist = conversation.tourist_id === currentUserId;
-    const other = isCurrentUserTourist
-        ? conversation.provider
-        : conversation.tourist;
-
-    return {
-        id: conversation.$id,
-        otherParticipantName: other?.name ?? "Unknown",
-        otherParticipantAvatar: other?.avatar_url ?? "",
-        lastMessage: conversation.last_message ?? "",
-        lastMessageAt: conversation.last_message_at ?? conversation.$createdAt,
-        unreadCount: isCurrentUserTourist
-            ? conversation.tourist_unread
-            : conversation.provider_unread,
-        listingTitle: conversation.listing_title,
-    };
-}
+export { type InboxItem, mapConversationToInboxItem } from "./inbox-mappers";
