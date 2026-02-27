@@ -81,3 +81,18 @@ export function handleAppwriteError(error: unknown): AppError {
         "Something went wrong. Please try again."
     );
 }
+
+/**
+ * Checks if an error is a 404 Not Found error from Appwrite.
+ *
+ * Used in services to gracefully handle missing documents (return null)
+ * instead of throwing.
+ */
+export function isNotFound(error: unknown): boolean {
+    return (
+        !!error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code: unknown }).code === 404
+    );
+}

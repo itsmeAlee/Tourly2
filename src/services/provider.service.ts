@@ -1,7 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
-import { handleAppwriteError } from "@/lib/errors";
+import { handleAppwriteError, isNotFound } from "@/lib/errors";
 import type {
     ProviderDocument,
     CreateProviderInput,
@@ -78,12 +78,7 @@ export async function getProviderById(
             documentId
         );
     } catch (err) {
-        if (
-            err &&
-            typeof err === "object" &&
-            "code" in err &&
-            (err as { code: number }).code === 404
-        ) {
+        if (isNotFound(err)) {
             return null;
         }
         throw handleAppwriteError(err);
