@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { isValidRedirect } from "@/lib/security";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { mapAuthError } from "@/lib/auth-errors";
 import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
@@ -122,8 +123,8 @@ export function SignupForm() {
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-
-    const redirectTo = searchParams.get("next") || "/";
+    const nextParam = searchParams.get("next");
+    const redirectTo = isValidRedirect(nextParam) ? nextParam : "/";
 
     // Clear field error on change
     const clearError = (field: keyof FormErrors) => {

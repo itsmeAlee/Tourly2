@@ -7,6 +7,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isValidRedirect } from "@/lib/security";
 import { isAppwriteClientConfigured } from "@/lib/appwrite";
 import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
 
@@ -21,7 +22,8 @@ export function LoginForm() {
     const [error, setError] = useState("");
 
     // Get redirect URL from query params
-    const redirectTo = searchParams.get("next") || "/";
+    const nextParam = searchParams.get("next");
+    const redirectTo = isValidRedirect(nextParam) ? nextParam : "/";
 
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
