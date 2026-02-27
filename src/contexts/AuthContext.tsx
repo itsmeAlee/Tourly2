@@ -10,7 +10,7 @@ import React, {
     useEffect,
     useCallback,
 } from "react";
-import { Query, type Models } from "appwrite";
+import { Query, type Models, ID } from "appwrite";
 import {
     account,
     databases,
@@ -276,7 +276,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 // 1. Create the Appwrite account
-                const { ID } = await import("appwrite");
                 const newAccount = await account.create(
                     ID.unique(),
                     email,
