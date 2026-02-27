@@ -283,6 +283,14 @@ export async function getTopListings(
  *
  * Combines with optional type and region filters.
  * Limited to 30 results.
+ *
+ * NOTE: Appwrite only supports ONE `Query.search()` per request,
+ * so we search on `title` only (the most relevant field).
+ * A fulltext index `idx_listing_title_search` must exist on the
+ * `title` attribute of the `listings` collection.
+ *
+ * Graceful fallback: if the search index is unavailable (400),
+ * falls back to `getTopListings()` to keep the page usable.
  */
 export async function searchListings(
     query: string,
@@ -306,6 +314,21 @@ export async function searchListings(
         );
         return response.documents;
     } catch (err) {
+        // Graceful fallback: if fulltext index is not ready or missing (400),
+        // return top listings instead of crashing the search page.
+        if (
+            err &&
+            typeof err === "object" &&
+            "code" in err &&
+            (err as { code: number }).code === 400
+        ) {
+            console.warn(
+                "[ListingService] Full-text search failed (index may not be ready). " +
+                "Falling back to getTopListings().",
+                err
+            );
+            return getTopListings(type ?? "stay", 20);
+        }
         throw handleAppwriteError(err);
     }
 }
@@ -328,10 +351,12 @@ export async function updateListing(
         if (input.title !== undefined) data.title = input.title;
         if (input.description !== undefined)
             data.description = input.description;
+        if (input.location !== undefined) data.location = input.location;
         if (input.region !== undefined) data.region = input.region;
         if (input.price !== undefined) data.price = input.price;
         if (input.price_unit !== undefined) data.price_unit = input.price_unit;
         if (input.images !== undefined) data.images = input.images;
+        if (input.highlights !== undefined) data.highlights = input.highlights;
         if (input.is_active !== undefined) data.is_active = input.is_active;
 
         const updated = await databases.updateDocument<ListingDocument>(

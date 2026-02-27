@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, MessageSquare, Heart, Settings, ChevronRight, Camera, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadCount } from "@/hooks/use-unread-count";
 import { Button } from "@/components/ui/button";
 import { LogoutConfirmModal } from "@/components/auth/LogoutConfirmModal";
 import { cn } from "@/lib/utils";
@@ -22,8 +23,7 @@ export function AccountHub() {
     const { user, isAuthenticated, isLoading } = useAuth();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    // Mock unread count - in production this would come from API
-    const unreadMessages = 3;
+    const unreadMessages = useUnreadCount();
 
     const quickActions: QuickActionTile[] = [
         {

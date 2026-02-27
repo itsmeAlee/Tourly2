@@ -42,6 +42,9 @@ export const INDEXES = {
         type: "idx_listing_type", // key
         region: "idx_listing_region", // key
         isActive: "idx_listing_active", // key
+        titleSearch: "idx_listing_title_search", // fulltext
+        descriptionSearch: "idx_listing_description_search", // fulltext
+        typeActiveRating: "idx_listing_type_active_rating", // composite key
     },
     stayDetails: {
         listing: "idx_stay_listing", // unique
