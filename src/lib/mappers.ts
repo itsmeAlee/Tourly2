@@ -24,6 +24,7 @@ import type {
     ListingImage,
 } from "@/components/listing/types";
 import { getListingImageUrl, getAvatarUrl } from "@/lib/storage";
+import { listingTypeToCategory } from "./category-mapper";
 
 // ─── Type Exports ───────────────────────────────────────
 
@@ -64,17 +65,8 @@ export interface InboxItem {
 
 // ─── Listing Type → Category Mapping ────────────────────
 
-/** Maps service ListingType to the UI ListingCategory. */
-export function listingTypeToCategory(type: ListingType): ListingCategory {
-    switch (type) {
-        case "stay":
-            return "hotel";
-        case "transport":
-            return "tour-operator";
-        case "guide":
-            return "guide";
-    }
-}
+/** Re-export for backward compatibility */
+export { listingTypeToCategory };
 
 // ─── TopRatedSection Mapper ─────────────────────────────
 
