@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { mapAuthError } from "@/lib/auth-errors";
 import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
+import { isValidRedirect } from "@/lib/security";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -123,7 +124,8 @@ export function SignupForm() {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
 
-    const redirectTo = searchParams.get("next") || "/";
+    const nextParam = searchParams.get("next");
+    const redirectTo = isValidRedirect(nextParam) ? nextParam! : "/";
 
     // Clear field error on change
     const clearError = (field: keyof FormErrors) => {

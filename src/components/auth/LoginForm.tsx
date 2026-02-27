@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isAppwriteClientConfigured } from "@/lib/appwrite";
 import { AuthServiceUnavailable } from "@/components/auth/AuthServiceUnavailable";
+import { isValidRedirect } from "@/lib/security";
 
 export function LoginForm() {
     const router = useRouter();
@@ -21,7 +22,8 @@ export function LoginForm() {
     const [error, setError] = useState("");
 
     // Get redirect URL from query params
-    const redirectTo = searchParams.get("next") || "/";
+    const nextParam = searchParams.get("next");
+    const redirectTo = isValidRedirect(nextParam) ? nextParam! : "/";
 
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
