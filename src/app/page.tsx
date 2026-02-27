@@ -80,7 +80,11 @@ export default async function HomePage() {
             <ProviderHomeRedirect />
             {/* Mobile View */}
             <div className="block md:hidden">
-                <MobileSearchView />
+                <MobileSearchView
+                    initialHotels={hotelItems}
+                    initialTransports={transportItems}
+                    initialGuides={guideItems}
+                />
                 <MobileBottomNav />
             </div>
 

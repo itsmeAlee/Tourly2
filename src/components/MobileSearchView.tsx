@@ -52,26 +52,42 @@ const boxClasses = "flex items-start gap-3 px-4 pt-2 pb-3 border border-border r
 // Height of the sticky header bar
 const STICKY_HEADER_HEIGHT = 44; // Compact height for sticky state
 
-export function MobileSearchView() {
+interface MobileSearchViewProps {
+  initialHotels?: TopRatedItem[];
+  initialTransports?: TopRatedItem[];
+  initialGuides?: TopRatedItem[];
+}
+
+export function MobileSearchView({
+  initialHotels,
+  initialTransports,
+  initialGuides,
+}: MobileSearchViewProps) {
   const [activeService, setActiveService] = useState<ServiceId>("stays");
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const searchFormRef = useRef<HTMLDivElement>(null);
 
   // ── Real data state for top-rated sections ──
-  const [hotelItems, setHotelItems] = useState<TopRatedItem[]>(mockHotels);
-  const [transportItems, setTransportItems] = useState<TopRatedItem[]>(mockTourOperators);
-  const [guideItems, setGuideItems] = useState<TopRatedItem[]>(mockGuides);
-  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [hotelItems, setHotelItems] = useState<TopRatedItem[]>(initialHotels || mockHotels);
+  const [transportItems, setTransportItems] = useState<TopRatedItem[]>(initialTransports || mockTourOperators);
+  const [guideItems, setGuideItems] = useState<TopRatedItem[]>(initialGuides || mockGuides);
+  const [isDataLoading, setIsDataLoading] = useState(!initialHotels && !initialTransports && !initialGuides);
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
     setHasHydrated(true);
   }, []);
 
-  // Fetch real data on mount — fall back to mocks on error
+  // Fetch real data on mount if not provided — fall back to mocks on error
   useEffect(() => {
     if (!hasHydrated) return;
+
+    // Skip fetch if initial data is already provided via props
+    if (initialHotels || initialTransports || initialGuides) {
+      setIsDataLoading(false);
+      return;
+    }
 
     async function fetchTopRated() {
       try {
@@ -91,7 +107,7 @@ export function MobileSearchView() {
       }
     }
     fetchTopRated();
-  }, [hasHydrated]);
+  }, [hasHydrated, initialHotels, initialTransports, initialGuides]);
 
   // Intersection Observer for sticky detection - triggers when search form leaves viewport
   useEffect(() => {
