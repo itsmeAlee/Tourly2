@@ -1,7 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
-import { handleAppwriteError, AppError } from "@/lib/errors";
+import { handleAppwriteError, AppError, isAppwrite404 } from "@/lib/errors";
 import type {
     ConversationDocument,
     ConversationWithParticipants,
@@ -101,12 +101,7 @@ export async function getConversationById(
             conversationId
         );
     } catch (err) {
-        if (
-            err &&
-            typeof err === "object" &&
-            "code" in err &&
-            (err as { code: number }).code === 404
-        ) {
+        if (isAppwrite404(err)) {
             return null;
         }
         throw handleAppwriteError(err);

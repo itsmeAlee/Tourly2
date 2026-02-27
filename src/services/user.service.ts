@@ -1,7 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
-import { handleAppwriteError } from "@/lib/errors";
+import { handleAppwriteError, isAppwrite404 } from "@/lib/errors";
 import type {
     UserDocument,
     CreateUserInput,
@@ -79,12 +79,7 @@ export async function getUserById(
         );
     } catch (err) {
         // 404 → return null instead of throwing
-        if (
-            err &&
-            typeof err === "object" &&
-            "code" in err &&
-            (err as { code: number }).code === 404
-        ) {
+        if (isAppwrite404(err)) {
             return null;
         }
         throw handleAppwriteError(err);

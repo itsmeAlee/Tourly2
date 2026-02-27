@@ -1,7 +1,7 @@
 import { ID, Query, Permission, Role } from "appwrite";
 import { databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
-import { handleAppwriteError, AppError } from "@/lib/errors";
+import { handleAppwriteError, AppError, isAppwrite404 } from "@/lib/errors";
 import { deleteFile } from "./storage.service";
 import { BUCKETS } from "@/lib/appwrite-config";
 import type {
@@ -164,12 +164,7 @@ export async function getListingById(
 
         return { ...listing, details };
     } catch (err) {
-        if (
-            err &&
-            typeof err === "object" &&
-            "code" in err &&
-            (err as { code: number }).code === 404
-        ) {
+        if (isAppwrite404(err)) {
             return null;
         }
         throw handleAppwriteError(err);
