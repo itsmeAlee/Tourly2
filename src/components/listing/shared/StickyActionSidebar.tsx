@@ -3,8 +3,8 @@
 import { Heart, MessageCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { useMessageProvider } from "@/hooks/useMessageProvider";
+import { useSaved } from "@/hooks/use-saved";
 
 interface StickyActionSidebarProps {
     price: number;
@@ -23,7 +23,8 @@ export function StickyActionSidebar({
     providerId,
     className,
 }: StickyActionSidebarProps) {
-    const [isSaved, setIsSaved] = useState(false);
+    const { isSaved, toggleSaved } = useSaved();
+    const saved = isSaved(listingId);
 
     const { handleMessageClick, isLoading } = useMessageProvider({
         listingId,
@@ -32,10 +33,6 @@ export function StickyActionSidebar({
     });
 
     const formattedPrice = new Intl.NumberFormat('en-PK').format(price);
-
-    const handleSaveClick = () => {
-        setIsSaved(!isSaved);
-    };
 
     return (
         <div
@@ -75,10 +72,10 @@ export function StickyActionSidebar({
 
             {/* Save to Wishlist */}
             <button
-                onClick={handleSaveClick}
+                onClick={() => toggleSaved(listingId)}
                 className={cn(
                     "w-full flex items-center justify-center gap-2 py-3 rounded-xl border transition-colors",
-                    isSaved
+                    saved
                         ? "border-red-200 bg-red-50 text-red-600"
                         : "border-gray-200 hover:bg-gray-50 text-foreground"
                 )}
@@ -86,14 +83,13 @@ export function StickyActionSidebar({
                 <Heart
                     className={cn(
                         "w-5 h-5 transition-colors",
-                        isSaved ? "fill-red-500 text-red-500" : ""
+                        saved ? "fill-red-500 text-red-500" : ""
                     )}
                 />
                 <span className="font-medium">
-                    {isSaved ? "Saved" : "Save to Wishlist"}
+                    {saved ? "Saved" : "Save to Wishlist"}
                 </span>
             </button>
         </div>
     );
 }
-

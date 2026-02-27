@@ -1,7 +1,9 @@
 import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite";
+import { account, databases } from "@/lib/appwrite";
 import { DATABASE_ID, COLLECTIONS } from "@/lib/appwrite-config";
-import { handleAppwriteError } from "@/lib/errors";
+import { handleAppwriteError, AppError } from "@/lib/errors";
+import { uploadAvatar } from "@/services/storage.service";
+import { getAvatarUrl } from "@/lib/storage";
 import type {
     UserDocument,
     CreateUserInput,
@@ -132,6 +134,86 @@ export async function isEmailAvailable(email: string): Promise<boolean> {
         );
         return response.documents.length === 0;
     } catch (err) {
+        throw handleAppwriteError(err);
+    }
+}
+
+// ─── Profile Update Functions ───────────────────────────
+
+/**
+ * Updates the user's display name in both Appwrite Auth and the users collection.
+ *
+ * @param accountId  - The Appwrite account $id (same as `user.id` from AuthContext)
+ * @param newName    - The new display name (min 2 chars, max 100)
+ */
+export async function updateUserName(
+    accountId: string,
+    newName: string
+): Promise<void> {
+    const trimmed = newName.trim();
+    if (trimmed.length < 2 || trimmed.length > 100) {
+        throw new AppError(
+            "VALIDATION",
+            "Name must be between 2 and 100 characters."
+        );
+    }
+
+    try {
+        // Resolve user document ID from account ID
+        const userDoc = await getUserByAccountId(accountId);
+        if (!userDoc) {
+            throw new AppError("NOT_FOUND", "User profile not found.");
+        }
+
+        // Update Appwrite Auth account name + users collection in parallel
+        await Promise.all([
+            account.updateName(trimmed),
+            databases.updateDocument(
+                DATABASE_ID,
+                COLLECTIONS.USERS,
+                userDoc.$id,
+                { name: trimmed }
+            ),
+        ]);
+    } catch (err) {
+        if (err instanceof AppError) throw err;
+        throw handleAppwriteError(err);
+    }
+}
+
+/**
+ * Uploads a new avatar to Appwrite Storage, updates the users collection
+ * document with the preview URL, and returns the new avatar URL.
+ *
+ * @param accountId - The Appwrite account $id (same as `user.id` from AuthContext)
+ * @param file      - The image File to upload
+ * @returns         - The new avatar preview URL
+ */
+export async function updateUserAvatar(
+    accountId: string,
+    file: File
+): Promise<string> {
+    try {
+        // Resolve user document ID from account ID
+        const userDoc = await getUserByAccountId(accountId);
+        if (!userDoc) {
+            throw new AppError("NOT_FOUND", "User profile not found.");
+        }
+
+        const fileId = await uploadAvatar(file, accountId);
+        const previewUrl = getAvatarUrl(fileId);
+
+        // Store the preview URL in the users collection
+        await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTIONS.USERS,
+            userDoc.$id,
+            { avatar_url: previewUrl }
+        );
+
+        return previewUrl;
+    } catch (err) {
+        if (err instanceof AppError) throw err;
         throw handleAppwriteError(err);
     }
 }

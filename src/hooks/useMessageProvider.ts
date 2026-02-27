@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getOrCreateConversation } from "@/services/conversation.service";
+import { useToast } from "@/components/ui/use-toast";
 
 interface UseMessageProviderOptions {
     listingId: string;
@@ -24,6 +25,7 @@ export function useMessageProvider({
 }: UseMessageProviderOptions) {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+    const { toast } = useToast();
     const [isCreating, setIsCreating] = useState(false);
 
     const handleMessageClick = async () => {
@@ -33,7 +35,11 @@ export function useMessageProvider({
         }
 
         if (user.role === "provider") {
-            alert("Only tourists can start a new message thread from a listing.");
+            toast({
+                title: "Not available",
+                description: "Only travelers can start a new conversation from a listing.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -56,7 +62,11 @@ export function useMessageProvider({
             router.push(`/inbox/${conv.$id}`);
         } catch (err) {
             console.error("Failed to start conversation:", err);
-            alert("Couldn't start the conversation. Please try again.");
+            toast({
+                title: "Couldn't start conversation",
+                description: "Something went wrong. Please try again.",
+                variant: "destructive",
+            });
         } finally {
             setIsCreating(false);
         }

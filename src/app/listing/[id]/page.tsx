@@ -111,7 +111,7 @@ export default async function ListingPage(props: Props) {
     return (
         <div className="min-h-screen bg-white">
             {/* Header with back navigation */}
-            <ListingHeader title={mappedListing.title} />
+            <ListingHeader title={mappedListing.title} listingId={mappedListing.id} />
 
             {/* Dynamic Content based on listing type */}
             <main className="pb-24 lg:pb-8">

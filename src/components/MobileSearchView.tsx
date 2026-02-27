@@ -476,7 +476,7 @@ export function MobileSearchView() {
             subtitle="Handpicked accommodations loved by travelers"
             category="hotel"
             items={hotelItems}
-            viewAllHref="/hotels"
+            viewAllHref="/search?type=stays"
           />
         )}
 
@@ -486,7 +486,7 @@ export function MobileSearchView() {
             subtitle="Trusted agencies for your perfect adventure"
             category="tour-operator"
             items={transportItems}
-            viewAllHref="/tour-operators"
+            viewAllHref="/search?type=transport"
           />
         )}
 
@@ -496,7 +496,7 @@ export function MobileSearchView() {
             subtitle="Expert local guides for unforgettable experiences"
             category="guide"
             items={guideItems}
-            viewAllHref="/guides"
+            viewAllHref="/search?type=guides"
           />
         )}
       </div>

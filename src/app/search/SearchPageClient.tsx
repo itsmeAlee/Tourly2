@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ChevronLeft, X, Search, Sparkles, MessageSquare, RefreshCw } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Components
 import { UnifiedSearchWidget } from "@/components/search/UnifiedSearchWidget";
@@ -50,6 +51,7 @@ function ResultsSkeleton() {
 function SearchResultsContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
     // Local state for mobile search expansion
     const [isMobileSearchExpanded, setIsMobileSearchExpanded] = useState(false);
@@ -223,7 +225,33 @@ function SearchResultsContent() {
                                     TripAI
                                 </Link>
                             </div>
-                            <Button size="sm">Login</Button>
+                            {authLoading ? (
+                                <div className="w-20 h-9 bg-gray-100 rounded-lg animate-pulse" />
+                            ) : isAuthenticated && user ? (
+                                <Link
+                                    href="/account"
+                                    className="flex items-center gap-2 p-1.5 rounded-full hover:bg-muted transition-colors"
+                                    aria-label="My account"
+                                >
+                                    {user.avatar ? (
+                                        <img
+                                            src={user.avatar}
+                                            alt={user.name}
+                                            className="w-8 h-8 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <span className="text-sm font-bold text-primary">
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+                                </Link>
+                            ) : (
+                                <Link href="/login?next=/search">
+                                    <Button size="sm" className="rounded-xl">Login</Button>
+                                </Link>
+                            )}
                         </div>
                     </div>
 

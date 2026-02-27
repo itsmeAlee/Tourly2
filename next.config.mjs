@@ -18,6 +18,12 @@ const nextConfig = {
                 port: '',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'cloud.appwrite.io',
+                port: '',
+                pathname: '/**',
+            },
         ],
         unoptimized: false,
     },

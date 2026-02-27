@@ -16,3 +16,4 @@ export * from "./listing.service";
 export * from "./conversation.service";
 export * from "./message.service";
 export * from "./storage.service";
+export * from "./saved.service";

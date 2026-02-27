@@ -19,6 +19,7 @@ export const COLLECTIONS = {
     GUIDE_DETAILS: "guide-details",
     CONVERSATIONS: "conversations",
     MESSAGES: "messages",
+    SAVED_LISTINGS: "saved-listings",
 } as const;
 
 // ─── Legacy Exports (backwards compatibility) ────────────
@@ -67,6 +68,10 @@ export const INDEXES = {
         sender: "idx_msg_sender", // key
         created: "idx_msg_created", // key (ASC)
         isRead: "idx_msg_read", // key
+    },
+    savedListings: {
+        user: "idx_saved_user", // key
+        userListing: "idx_saved_user_listing", // unique compound
     },
 } as const;
 

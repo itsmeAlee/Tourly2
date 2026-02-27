@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Heart, MessageCircle, BadgeCheck, MapPin, Languages, Clock } from "lucide-react";
+import { ArrowLeft, Share2, MessageCircle, BadgeCheck, MapPin, Languages, Clock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,9 @@ import type { PublicProviderProfile as Provider } from "@/lib/mappers";
 import type { Listing } from "@/components/listing/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { getOrCreateConversation } from "@/services/conversation.service";
 
 interface ProviderProfileProps {
     provider: Provider;
@@ -18,7 +21,9 @@ interface ProviderProfileProps {
 
 export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
     const router = useRouter();
-    const [isSaved, setIsSaved] = useState(false);
+    const { user, isAuthenticated } = useAuth();
+    const { toast } = useToast();
+    const [isStartingConversation, setIsStartingConversation] = useState(false);
 
     const handleBack = () => {
         if (window.history.length > 1) {
@@ -28,9 +33,49 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
         }
     };
 
-    const handleMessage = () => {
-        // TODO: Open message modal
-        console.log('Message provider:', provider.id);
+    const handleMessage = async () => {
+        if (!isAuthenticated || !user) {
+            router.push(`/login?next=/provider/${provider.id}`);
+            return;
+        }
+
+        if (user.role === 'provider') {
+            toast({
+                title: "Not available",
+                description: "Only travelers can message service providers.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (!listings || listings.length === 0) {
+            toast({
+                title: "No listings available",
+                description: "This provider hasn't created any listings yet.",
+            });
+            return;
+        }
+
+        setIsStartingConversation(true);
+
+        try {
+            const firstListing = listings[0];
+            const conv = await getOrCreateConversation(
+                firstListing.id,
+                user.id,
+                provider.id
+            );
+            router.push(`/inbox/${conv.$id}`);
+        } catch (err) {
+            console.error('[ProviderProfile] Failed to start conversation:', err);
+            toast({
+                title: "Couldn't start conversation",
+                description: "Something went wrong. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsStartingConversation(false);
+        }
     };
 
     // Group listings by type
@@ -58,16 +103,17 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
                         </div>
 
                         <button
-                            onClick={() => setIsSaved(!isSaved)}
+                            onClick={async () => {
+                                if (navigator.share) {
+                                    try { await navigator.share({ title: provider.name, url: window.location.href }); } catch { }
+                                } else {
+                                    await navigator.clipboard.writeText(window.location.href);
+                                }
+                            }}
                             className="p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            aria-label={isSaved ? "Remove from wishlist" : "Save to wishlist"}
+                            aria-label="Share provider profile"
                         >
-                            <Heart
-                                className={cn(
-                                    "w-5 h-5 transition-colors",
-                                    isSaved ? "fill-red-500 text-red-500" : "text-foreground"
-                                )}
-                            />
+                            <Share2 className="w-5 h-5 text-foreground" />
                         </button>
                     </div>
                 </div>
@@ -131,21 +177,19 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
                                 <div className="flex items-center justify-center lg:justify-start gap-3">
                                     <Button
                                         onClick={handleMessage}
+                                        disabled={isStartingConversation || !listings || listings.length === 0}
                                         className="rounded-2xl px-6"
                                     >
-                                        <MessageCircle className="w-4 h-4 mr-2" />
-                                        Message Provider
+                                        {isStartingConversation ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <MessageCircle className="w-4 h-4 mr-2" />
+                                        )}
+                                        {listings && listings.length === 0
+                                            ? "No listings yet"
+                                            : "Message Provider"}
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsSaved(!isSaved)}
-                                        className="rounded-2xl"
-                                    >
-                                        <Heart className={cn(
-                                            "w-4 h-4",
-                                            isSaved && "fill-red-500 text-red-500"
-                                        )} />
-                                    </Button>
+                                    {/* TODO: Implement save-provider feature if needed — providers are not listings */}
                                 </div>
                             </div>
                         </div>
@@ -230,11 +274,18 @@ export function ProviderProfile({ provider, listings }: ProviderProfileProps) {
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 lg:hidden z-30">
                 <Button
                     onClick={handleMessage}
+                    disabled={isStartingConversation || !listings || listings.length === 0}
                     className="w-full rounded-2xl"
                     size="lg"
                 >
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Message {provider.name.split(' ')[0]}
+                    {isStartingConversation ? (
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ) : (
+                        <MessageCircle className="w-5 h-5 mr-2" />
+                    )}
+                    {listings && listings.length === 0
+                        ? "No listings yet"
+                        : `Message ${provider.name.split(' ')[0]}`}
                 </Button>
             </div>
         </>

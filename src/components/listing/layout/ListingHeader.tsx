@@ -2,19 +2,19 @@
 
 import { ArrowLeft, Share2, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useSaved } from "@/hooks/use-saved";
 
 interface ListingHeaderProps {
     title?: string;
+    listingId: string;
 }
 
-export function ListingHeader({ title }: ListingHeaderProps) {
+export function ListingHeader({ title, listingId }: ListingHeaderProps) {
     const router = useRouter();
-    const [isSaved, setIsSaved] = useState(false);
+    const { isSaved, toggleSaved } = useSaved();
 
     const handleBack = () => {
-        // Use router.back() with fallback to home
         if (window.history.length > 1) {
             router.back();
         } else {
@@ -33,15 +33,11 @@ export function ListingHeader({ title }: ListingHeaderProps) {
                 // User cancelled or share failed
             }
         } else {
-            // Fallback: copy to clipboard
             await navigator.clipboard.writeText(window.location.href);
-            // Could show a toast here
         }
     };
 
-    const handleSave = () => {
-        setIsSaved(!isSaved);
-    };
+    const saved = isSaved(listingId);
 
     return (
         <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
@@ -74,14 +70,14 @@ export function ListingHeader({ title }: ListingHeaderProps) {
                             <Share2 className="w-5 h-5 text-foreground" />
                         </button>
                         <button
-                            onClick={handleSave}
+                            onClick={() => toggleSaved(listingId)}
                             className="p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            aria-label={isSaved ? "Remove from wishlist" : "Save to wishlist"}
+                            aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
                         >
                             <Heart
                                 className={cn(
                                     "w-5 h-5 transition-colors",
-                                    isSaved
+                                    saved
                                         ? "fill-red-500 text-red-500"
                                         : "text-foreground"
                                 )}

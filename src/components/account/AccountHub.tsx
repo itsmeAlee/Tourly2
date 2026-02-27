@@ -102,7 +102,11 @@ export function AccountHub() {
                             </div>
                         )}
                         {/* Edit Avatar Overlay */}
-                        <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors">
+                        <button
+                            onClick={() => router.push("/account/edit")}
+                            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                            aria-label="Edit profile photo"
+                        >
                             <Camera className="w-4 h-4" />
                         </button>
                     </div>
